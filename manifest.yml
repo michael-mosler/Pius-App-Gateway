@@ -1,0 +1,11 @@
+applications:
+- name: Pius-Gateway
+  instances: 1
+  memory: 64M
+  disk_quota: 1024M
+  routes:
+  - route: pius-gateway.eu-de.mybluemix.net
+  command: node server/server_app.js
+  env:
+    NODE_ENV: dev
+  stack: cflinuxfs2
