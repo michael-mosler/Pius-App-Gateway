@@ -2,10 +2,10 @@ const BodyParser = require('body-parser');
 const CookieParser = require('cookie-parser');
 const Express = require('express');
 const Proxy = require('express-http-proxy');
-const NodeRestClient = require('node-rest-client').Client;
 
 const Config = require('./Config');
 const NewsReqHandler = require('./NewsReqHandler');
+const VertretungsplanHandler = require('./VertretungsplanHandler');
 
 class App {
     constructor() {
@@ -13,7 +13,7 @@ class App {
         this.port = process.env.PORT || this.config.port;
         this.expressApp = App.initMiddleware();
         this.initRouting();
-        this.httpClient = new NodeRestClient();
+        this.vertretungsplanHandler = new VertretungsplanHandler();
     }
 
     /**
@@ -50,6 +50,10 @@ class App {
                 return NewsReqHandler.getNewsFromHomePage(proxyResData);
             },
         }));
+
+        this.expressApp.use(/^\/vertretungsplan/, (req, res) => {
+            this.vertretungsplanHandler.process(req, res);
+        });
 
         this.expressApp.use(/.*/, Proxy(this.config.piusBaseUrl, {
             proxyReqPathResolver: function(req) {
