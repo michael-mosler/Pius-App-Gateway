@@ -58,6 +58,9 @@ class App {
         this.expressApp.use(/.*/, Proxy(this.config.piusBaseUrl, {
             proxyReqPathResolver: function(req) {
                 return require('url').parse(req.originalUrl).path;
+            },
+            userResDecorator: function(proxyRes, proxyResData) {
+                return NewsReqHandler.removeStandardHeader(proxyResData);
             }
         }));
     }

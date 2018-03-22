@@ -102,13 +102,17 @@ class VertretungsplanHandler {
         else if (json.node === 'text' && json.text.match(/^Heute ist/)) {
             this.vertretungsplan.tickerText = json.text;
         }
-        else if (json.node === 'text' && json.text.match(/^((\d[A-E])|(Q[12])|(EF))/)) {
+        else if (json.node === 'text' && json.text.match(/^((\d[A-E])|(Q[12])|(EF)|(IK))/)) {
             this.vertretungsplan.currentDateItem.gradeItems.push(new GradeItem(json.text));
         }
         else if (json.attr && json.attr.class instanceof Array && json.attr.class[0] === 'vertretung' && json.attr.class[1] === 'neu') {
             const text = VertretungsplanHandler.mergeSubTextItems(json);
             this.vertretungsplan.currentDateItem.currentGradeItem.currentVertretungsplanItem.detailItems.push(text.replace(/\s\s+/, ' '))
             isInItemList = true;
+        }
+        else if (json.attr && json.attr.class instanceof Array && json.attr.class[0] === 'eva') {
+            const text = VertretungsplanHandler.mergeSubTextItems(json);
+            this.vertretungsplan.currentDateItem.currentGradeItem.currentVertretungsplanItem.detailItems.push(text.replace(/\s\s+/, ' '))
         }
         else if (json.attr && json.attr.class === 'vertretung') {
             const text = VertretungsplanHandler.mergeSubTextItems(json);
