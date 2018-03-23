@@ -10,7 +10,6 @@ const VertretungsplanHandler = require('./VertretungsplanHandler');
 class App {
     constructor() {
         this.config = new Config();
-        this.port = process.env.PORT || this.config.port;
         this.expressApp = App.initMiddleware();
         this.initRouting();
         this.vertretungsplanHandler = new VertretungsplanHandler();
@@ -59,9 +58,15 @@ class App {
             proxyReqPathResolver: function(req) {
                 return require('url').parse(req.originalUrl).path;
             },
-            userResDecorator: function(proxyRes, proxyResData) {
-                return NewsReqHandler.removeStandardHeader(proxyResData);
-            }
+            userResDecorator: function(proxyRes, proxyResData, userReq) {
+                if (userReq.baseUrl.match(/wordpress\/wp-admin\/admin-ajax.php/)) {
+                    return NewsReqHandler.pager(proxyResData)
+                }
+
+                return (userReq.baseUrl.match(/.html?$/))
+                ? NewsReqHandler.removeStandardHeader(proxyResData)
+                : proxyResData;
+            },
         }));
     }
 
@@ -70,8 +75,8 @@ class App {
      */
     run() {
         try {
-            this.expressApp.listen(this.port);
-            process.stdout.write(`Application is listening at: ${this.port}\n`);
+            this.expressApp.listen(this.config.port);
+            process.stdout.write(`Application is listening at: ${this.config.port}\n`);
         } catch (err) {
             process.stderr.write(`The middleware failed to start with error ${err}\n`);
             process.exit(-1);

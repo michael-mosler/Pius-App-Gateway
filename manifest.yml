@@ -8,4 +8,5 @@ applications:
   command: node server/server_app.js
   env:
     NODE_ENV: dev
+    BASE_URL: https://pius-gateway.eu-de.mybluemix.net
   stack: cflinuxfs2
