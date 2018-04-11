@@ -1,5 +1,6 @@
 const NodeRestClient = require('node-rest-client').Client;
 const Html2Json = require('html2json').html2json;
+const request = require('request');
 
 class VertretungsplanItem {
     constructor() {
@@ -54,6 +55,21 @@ class Vertretungsplan {
 
     get currentDateItem() {
         return this.dateItems[this.dateItems.length - 1];
+    }
+
+    filter(forGrade) {
+        if (!forGrade) {
+            return;
+        }
+
+        this.dateItems.forEach((date) => {
+            const index = date.gradeItems.findIndex(gradeItem => gradeItem.grade === forGrade);
+            if (index === -1) {
+                date.gradeItems = [];
+            } else {
+                date.gradeItems = [date.gradeItems[index]];
+            }
+        });
     }
 }
 
@@ -147,11 +163,9 @@ class VertretungsplanHandler {
      * @param res
      */
     process(req, res) {
-        const base64encodedData = new Buffer('Papst' + ':' + 'PiusX').toString('base64');
-
         this.client.get('http://pius-gymnasium.de/vertretungsplan/', {
             headers: {
-                'Authorization': 'Basic ' + base64encodedData
+                'Authorization': req.header('authorization')
             }
         }, (data, response) => {
             let json;
@@ -159,10 +173,32 @@ class VertretungsplanHandler {
                 this.vertretungsplan = new Vertretungsplan();
                 json = Html2Json(data.toString('utf8'));
                 json = this.transform(json);
+
+                this.vertretungsplan.filter(req.query.forGrade);
+                res
+                    .status(response.statusCode)
+                    .send(this.vertretungsplan);
+            } else {
+                res.status(response.statusCode).end();
             }
-            res
-                .status(response.statusCode)
-                .send(this.vertretungsplan);
+        });
+    }
+
+    /**
+     *
+     * @param req
+     * @param res
+     */
+    validateLogin(req, res) {
+        const options = {
+            url: 'http://pius-gymnasium.de/vertretungsplan/',
+            headers: {
+                'Authorization': req.header('authorization'),
+            }
+        }
+
+        request.head(options, (err, response, body) => {
+            res.status(response.statusCode).end();
         });
     }
 }

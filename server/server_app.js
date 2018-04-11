@@ -54,6 +54,10 @@ class App {
             this.vertretungsplanHandler.process(req, res);
         });
 
+        this.expressApp.use(/^\/validateLogin/, (req, res) => {
+            this.vertretungsplanHandler.validateLogin(req, res);
+        });
+
         this.expressApp.use(/.*/, Proxy(this.config.piusBaseUrl, {
             proxyReqPathResolver: function(req) {
                 return require('url').parse(req.originalUrl).path;
