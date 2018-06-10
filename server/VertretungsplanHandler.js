@@ -1,6 +1,7 @@
 const NodeRestClient = require('node-rest-client').Client;
 const Html2Json = require('html2json').html2json;
 const request = require('request');
+const md5 = require('md5');
 
 class VertretungsplanItem {
     constructor() {
@@ -47,6 +48,15 @@ class Vertretungsplan {
         this._additionalText = '';
         this.lastUpdate = '';
         this.dateItems = [];
+        this._digest = null;
+    }
+
+    get digest() {
+        return this._digest;
+    }
+
+    set digest(value) {
+        this._digest = value;
     }
 
     set additionalText(value) {
@@ -108,7 +118,7 @@ class VertretungsplanHandler {
      * @param json
      * @returns {*}
      */
-    transform(json, isInItemList = false) {
+    transform(json, parent, isInItemList = false) {
         if (json.node === 'text' && json.text.match(/^Vertretungs- und Klausurplan/)) {
             this.vertretungsplan.dateItems.push(new DateItem(json.text));
         }
@@ -118,7 +128,7 @@ class VertretungsplanHandler {
         else if (json.node === 'text' && json.text.match(/^Heute ist/)) {
             this.vertretungsplan.tickerText = json.text;
         }
-        else if (json.node === 'text' && json.text.match(/^((\d[A-E])|(Q[12])|(EF)|(IK))/)) {
+        else if ((parent && parent.tag === 'th') && json.node === 'text' && json.text.match(/^((\d[A-E])|(Q[12])|(EF)|(IK)|(VT)|(HW))/)) {
             this.vertretungsplan.currentDateItem.gradeItems.push(new GradeItem(json.text));
         }
         else if (json.attr && json.attr.class instanceof Array && json.attr.class[0] === 'vertretung' && json.attr.class[1] === 'neu') {
@@ -150,7 +160,7 @@ class VertretungsplanHandler {
                     }
                 }
 
-                this.transform(child, isInItemList);
+                this.transform(child, json, isInItemList);
             });
         }
 
@@ -171,13 +181,21 @@ class VertretungsplanHandler {
             let json;
             if (response.statusCode === 200) {
                 this.vertretungsplan = new Vertretungsplan();
-                json = Html2Json(data.toString('utf8'));
-                json = this.transform(json);
+                const strData = data.toString();
+                const digest = md5(strData);
+                json = Html2Json(strData);
+                this.transform(json);
 
-                this.vertretungsplan.filter(req.query.forGrade);
-                res
-                    .status(response.statusCode)
-                    .send(this.vertretungsplan);
+                // When not modified do not send any data but report "not modified".
+                if (digest === req.query.digest) {
+                    res.status(304).end();
+                } else {
+                    this.vertretungsplan.filter(req.query.forGrade);
+                    this.vertretungsplan.digest = digest;
+                    res
+                        .status(response.statusCode)
+                        .send(this.vertretungsplan);
+                }
             } else {
                 res.status(response.statusCode).end();
             }
@@ -195,9 +213,9 @@ class VertretungsplanHandler {
             headers: {
                 'Authorization': req.header('authorization'),
             }
-        }
+        };
 
-        request.head(options, (err, response, body) => {
+        request.head(options, (err, response) => {
             res.status(response.statusCode).end();
         });
     }

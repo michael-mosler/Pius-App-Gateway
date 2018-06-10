@@ -1,6 +1,6 @@
 {
   "name": "Pius-Gateway",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Pius Website Gateway for Pius App",
   "repository": {
     "type": "git",
@@ -13,14 +13,15 @@
   "author": "Michael Mosler-Krings, Felix Krings",
   "license": "MIT",
   "dependencies": {
-    "body-parser": "^1.18.2",
+    "body-parser": "^1.18.3",
     "cheerio": "^1.0.0-rc.2",
     "cookie-parser": "^1.4.3",
-    "express": "^4.16.2",
-    "express-http-proxy": "^1.1.0",
+    "express": "^4.16.3",
+    "express-http-proxy": "^1.2.0",
     "html2json": "^1.0.2",
+    "md5": "^2.2.1",
     "node-rest-client": "^3.1.0",
-    "request": "^2.85.0"
+    "request": "^2.87.0"
   },
   "scripts": {
     "start": "node server/server_app.js"

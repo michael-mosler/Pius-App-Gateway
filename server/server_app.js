@@ -12,7 +12,6 @@ class App {
         this.config = new Config();
         this.expressApp = App.initMiddleware();
         this.initRouting();
-        this.vertretungsplanHandler = new VertretungsplanHandler();
     }
 
     /**
@@ -51,11 +50,13 @@ class App {
         }));
 
         this.expressApp.use(/^\/vertretungsplan/, (req, res) => {
-            this.vertretungsplanHandler.process(req, res);
+            const vertretungsplanHandler = new VertretungsplanHandler();
+            vertretungsplanHandler.process(req, res);
         });
 
         this.expressApp.use(/^\/validateLogin/, (req, res) => {
-            this.vertretungsplanHandler.validateLogin(req, res);
+            const vertretungsplanHandler = new VertretungsplanHandler();
+            vertretungsplanHandler.validateLogin(req, res);
         });
 
         this.expressApp.use(/.*/, Proxy(this.config.piusBaseUrl, {
