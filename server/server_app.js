@@ -6,6 +6,7 @@ const Proxy = require('express-http-proxy');
 const Config = require('./Config');
 const NewsReqHandler = require('./NewsReqHandler');
 const VertretungsplanHandler = require('./VertretungsplanHandler');
+const CalendarHandler = require('./CalendarHandler');
 
 class App {
     constructor() {
@@ -41,8 +42,6 @@ class App {
      * @private
      */
     initRouting() {
-        const newsReqHandler = new NewsReqHandler();
-
         this.expressApp.use(/^\/news$/, Proxy(this.config.piusBaseUrl, {
             userResDecorator: function (proxyRes, proxyResData, userReq, userRes) {
                 return NewsReqHandler.getNewsFromHomePage(proxyResData);
@@ -52,6 +51,11 @@ class App {
         this.expressApp.use(/^\/vertretungsplan/, (req, res) => {
             const vertretungsplanHandler = new VertretungsplanHandler();
             vertretungsplanHandler.process(req, res);
+        });
+
+        this.expressApp.use(/^\/calendar/, (req, res) => {
+            const calendarHandler = new CalendarHandler();
+            calendarHandler.process(req, res);
         });
 
         this.expressApp.use(/^\/validateLogin/, (req, res) => {

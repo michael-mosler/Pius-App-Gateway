@@ -1,0 +1,11 @@
+# Directories in app root to be ignored
+/doc
+
+# All node_modules directories
+/node_modules
+
+# Files in app root.
+/conf.json
+/build-*
+/.gitignore
+README.md

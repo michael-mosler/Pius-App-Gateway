@@ -25,5 +25,9 @@
   },
   "scripts": {
     "start": "node server/server_app.js"
+  },
+  "devDependencies": {
+    "ink-docstrap": "^1.3.2",
+    "jsdoc": "^3.5.5"
   }
 }
