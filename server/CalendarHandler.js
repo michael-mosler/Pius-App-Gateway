@@ -126,7 +126,6 @@ class CalendarHandler {
      * @param {Object} parent - Parent DOM node
      */
     transform(json, parent) {
-        console.log(json);
         if (json.tag === 'div' && json.attr && json.attr.class === 'monat' && json.child) {
             json.child.forEach((child) => {
                if (child.tag === 'h2' && child.child) {
