@@ -164,9 +164,15 @@ class VertretungsplanHandler {
      */
     transform(json, parent, isInItemList = false) {
         if (json.node === 'text' && json.text.match(/^Vertretungs- und Klausurplan/)) {
-            this.vertretungsplan.dateItems.push(new DateItem(json.text));
+            // Skip repeated items which might occur due to a bug on Pius web site.
+            const dateItem = new DateItem(json.text);
+            if (this.vertretungsplan.currentDateItem && dateItem.title === this.vertretungsplan.currentDateItem.title) {
+                return;
+            } else {
+                this.vertretungsplan.dateItems.push(new DateItem(json.text));
+            }
         }
-        else if (json.node === 'text' && json.text.match(/Letzte Aktualisierung:/)) {
+        else if (json.node === 'text' && json.text.match(/Letzte Aktualisierung:/) && !this.vertretungsplan.lastUpdate) {
             this.vertretungsplan.lastUpdate = json.text.replace(/[()]/g, '');
         }
         else if (json.node === 'text' && json.text.match(/^Heute ist/)) {
@@ -232,17 +238,18 @@ class VertretungsplanHandler {
         }, (data, response) => {
             let json;
             if (response.statusCode === 200) {
-                this.vertretungsplan = new Vertretungsplan();
                 const strData = data.toString();
                 const digest = md5(strData);
-                json = Html2Json(strData);
-                this.transform(json);
 
                 // When not modified do not send any data but report "not modified".
                 // noinspection JSUnresolvedVariable
                 if (digest === req.query.digest) {
                     res.status(304).end();
                 } else {
+                    this.vertretungsplan = new Vertretungsplan();
+                    json = Html2Json(strData);
+                    this.transform(json);
+
                     // noinspection JSUnresolvedVariable
                     this.vertretungsplan.filter(req.query.forGrade);
                     this.vertretungsplan.digest = digest;

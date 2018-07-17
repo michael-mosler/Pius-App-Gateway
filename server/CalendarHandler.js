@@ -85,7 +85,7 @@ class CalendarHandler {
         }
 
         return newInitializer
-            .replace(/[\r\t\t\n]/g, '')
+            .replace(/[\r\t\n]/g, '')
             .trim();
     }
 
