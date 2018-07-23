@@ -1,7 +1,7 @@
 /* eslint-disable max-len */
 const Verror = require('verror');
 const retry = require('retry');
-const Connection = require('./Connection');
+const Connection = require('./CloudantConnection');
 
 const retryOptions = {
     retries: 15,
@@ -18,7 +18,7 @@ const retryOptions = {
  * is interchangeable.
  * @property {String} type - Type of this driver: "Cloudant Driver"
  */
-class CloudantDriver {
+class CloudantDb {
     /**
      * Connect to a particular Cloudant database (which would be called table in traditional RDBM
      * Systems.
@@ -51,7 +51,7 @@ class CloudantDriver {
     /**
      * Connect to the database that has been specified on instantiation in parameter 'name' using
      * the the connection also given in constructor call.
-     * @returns {CloudantDriver} - Connected driver instance
+     * @returns {CloudantDb} - Connected driver instance
      * @throws {Verror} - Throws on connection error.
      */
     connect() {
@@ -86,7 +86,7 @@ class CloudantDriver {
     /**
      * Creates a database on the current connection.
      * @param {String} name - Name of the database
-     * @returns {Promise<CloudantDriver|Verror>} - Resolves to <i>this</i> on success.
+     * @returns {Promise<CloudantDb|Verror>} - Resolves to <i>this</i> on success.
      * @private
      */
     createAnyDatabase(name) {
@@ -113,7 +113,7 @@ class CloudantDriver {
 
     /**
      * Create database. Name is as set when database object is instantiated.
-     * @returns {Promise<CloudantDriver|Verror>} - Resolves to "this" on success.
+     * @returns {Promise<CloudantDb|Verror>} - Resolves to "this" on success.
      */
     create() {
         return this.createAnyDatabase(this.name);
@@ -121,7 +121,7 @@ class CloudantDriver {
 
     /**
      * Drops database with the given name on the current connection.
-     * @returns {Promise<CloudantDriver|Verror>} - Resolves to "this" on success.
+     * @returns {Promise<CloudantDb|Verror>} - Resolves to "this" on success.
      */
     dropAnyDatabase(name) {
         return new Promise((resolve, reject) => {
@@ -147,7 +147,7 @@ class CloudantDriver {
 
     /**
      * Drop database. Name is as set when database object is instantiated.
-     * @returns {Promise<CloudantDriver|Verror>} - Resolves to "this" on success.
+     * @returns {Promise<CloudantDb|Verror>} - Resolves to "this" on success.
      */
     drop() {
         return this.dropAnyDatabase(this.name);
@@ -624,4 +624,4 @@ class CloudantDriver {
     }
 }
 
-module.exports = CloudantDriver;
+module.exports = CloudantDb;

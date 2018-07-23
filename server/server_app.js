@@ -8,10 +8,15 @@ const NewsReqHandler = require('./NewsReqHandler');
 const VertretungsplanHandler = require('./VertretungsplanHandler');
 const CalendarHandler = require('./CalendarHandler');
 
+const DeviceTokenManager = require('./DeviceTokenManager');
+
 class App {
     constructor() {
         this.config = new Config();
         this.expressApp = App.initMiddleware();
+        this.router = Express.Router();
+
+        this.deviceTokenManager = new DeviceTokenManager();
         this.initRouting();
     }
 
@@ -42,28 +47,28 @@ class App {
      * @private
      */
     initRouting() {
-        this.expressApp.use(/^\/news$/, Proxy(this.config.piusBaseUrl, {
+        this.router.get(/^\/news$/, Proxy(this.config.piusBaseUrl, {
             userResDecorator: function (proxyRes, proxyResData, userReq, userRes) {
                 return NewsReqHandler.getNewsFromHomePage(proxyResData);
             },
         }));
 
-        this.expressApp.use(/^\/vertretungsplan/, (req, res) => {
+        this.router.get(/^\/vertretungsplan/, (req, res) => {
             const vertretungsplanHandler = new VertretungsplanHandler();
             vertretungsplanHandler.process(req, res);
         });
 
-        this.expressApp.use(/^\/calendar/, (req, res) => {
+        this.router.get(/^\/calendar/, (req, res) => {
             const calendarHandler = new CalendarHandler();
             calendarHandler.process(req, res);
         });
 
-        this.expressApp.use(/^\/validateLogin/, (req, res) => {
+        this.router.get(/^\/validateLogin/, (req, res) => {
             const vertretungsplanHandler = new VertretungsplanHandler();
             vertretungsplanHandler.validateLogin(req, res);
         });
 
-        this.expressApp.use(/.*/, Proxy(this.config.piusBaseUrl, {
+        this.router.get(/.*/, Proxy(this.config.piusBaseUrl, {
             proxyReqPathResolver: function(req) {
                 return require('url').parse(req.originalUrl).path;
             },
@@ -77,6 +82,10 @@ class App {
                 : proxyResData;
             },
         }));
+
+        // Device Token Manager routes.
+        this.router.post('/deviceToken', (req, res) => this.deviceTokenManager.addDeviceToken(req, res));
+        this.router.put('/deviceToken', (req, res) => this.deviceTokenManager.updateDeviceToken(req, res));
     }
 
     /**

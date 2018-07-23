@@ -1,6 +1,5 @@
 const cloudant = require('@cloudant/cloudant');
 const VError = require('verror');
-const Config = require('../providers/Config');
 
 /**
  * Cloudant  connection class. This class knows how to establish a physical connection to Cloudant.
@@ -11,7 +10,7 @@ const Config = require('../providers/Config');
  * @property {String) dbURL - URL of Cloudant connection
  * @property {String) type - Type of connection: "Cloudant Connection"
  */
-class Connection {
+class CloudantConnection {
     constructor() {
         this.instanceName = 'Cloudant';
         this.instanceOffering = 'Lite';
@@ -33,7 +32,7 @@ class Connection {
      */
     connect() {
         try {
-            return cloudant({ instanceName: this.instanceName, vcapServices: JSON.parse.process.env.VCAP_SERVICES });
+            return cloudant({ instanceName: this.instanceName, vcapServices: JSON.parse(process.env.VCAP_SERVICES) });
         } catch (err) {
             const verror = new VError({
                 name: 'DatabaseConnectionError',
@@ -50,4 +49,4 @@ class Connection {
     }
 }
 
-module.exports = Connection;
+module.exports = CloudantConnection;

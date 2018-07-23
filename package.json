@@ -13,6 +13,7 @@
   "author": "Michael Mosler-Krings, Felix Krings",
   "license": "MIT",
   "dependencies": {
+    "@cloudant/cloudant": "^2.3.0",
     "body-parser": "^1.18.3",
     "cheerio": "^1.0.0-rc.2",
     "cookie-parser": "^1.4.3",
@@ -21,7 +22,9 @@
     "html2json": "^1.0.2",
     "md5": "^2.2.1",
     "node-rest-client": "^3.1.0",
-    "request": "^2.87.0"
+    "request": "^2.87.0",
+    "retry": "^0.12.0",
+    "verror": "^1.10.0"
   },
   "scripts": {
     "start": "node server/server_app.js"
