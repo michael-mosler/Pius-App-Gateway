@@ -5,7 +5,11 @@
 /node_modules
 
 # Files in app root.
-/conf.json
 /build-*
+/conf.json
+/.DS_Store
+/.eslintrc.js
 /.gitignore
+/pius-gateway.env
 README.md
+/.vscode

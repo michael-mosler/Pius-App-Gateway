@@ -11,42 +11,42 @@ const VError = require('verror');
  * @property {String) type - Type of connection: "Cloudant Connection"
  */
 class CloudantConnection {
-    constructor() {
-        this.instanceName = 'Cloudant';
-        this.instanceOffering = 'Lite';
-    }
+  constructor() {
+    this.instanceName = 'Cloudant';
+    this.instanceOffering = 'Lite';
+  }
 
-    // noinspection JSMethodCanBeStatic
-    /**
-     * Gets type of this connection.
-     * @returns {string} - Type of connection
-     */
-    // eslint-disable-next-line class-methods-use-this
-    get type() {
-        return 'Cloudant Connection';
-    }
+  // noinspection JSMethodCanBeStatic
+  /**
+   * Gets type of this connection.
+   * @returns {string} - Type of connection
+   */
+  // eslint-disable-next-line class-methods-use-this
+  get type() {
+    return 'Cloudant Connection';
+  }
 
-    /**
-     * Establish connection to a CloudantDB instance.
-     * @returns {Object}
-     */
-    connect() {
-        try {
-            return cloudant({ instanceName: this.instanceName, vcapServices: JSON.parse(process.env.VCAP_SERVICES) });
-        } catch (err) {
-            const verror = new VError({
-                name: 'DatabaseConnectionError',
-                cause: err,
-                info: {
-                    instanceName: this.instanceName,
-                    instanceOffering: this.instanceOffering,
-                },
-            }, 'Failed to connect to CloudantDB');
+  /**
+   * Establish connection to a CloudantDB instance.
+   * @returns {Object}
+   */
+  connect() {
+    try {
+      return cloudant({ instanceName: this.instanceName, vcapServices: JSON.parse(process.env.VCAP_SERVICES) });
+    } catch (err) {
+      const verror = new VError({
+        name: 'DatabaseConnectionError',
+        cause: err,
+        info: {
+          instanceName: this.instanceName,
+          instanceOffering: this.instanceOffering,
+        },
+      }, 'Failed to connect to CloudantDB');
 
-            process.stderr.write(`${verror}\n`);
-            throw verror;
-        }
+      process.stderr.write(`${verror}\n`);
+      throw verror;
     }
+  }
 }
 
 module.exports = CloudantConnection;
