@@ -7,8 +7,8 @@
     "url": "git@github.org:Pius-Gateway.git"
   },
   "engines": {
-    "node": "6.10.x",
-    "npm": "3.10.x"
+    "node": "8.11.x",
+    "npm": "6.2.x"
   },
   "author": "Michael Mosler-Krings, Felix Krings",
   "license": "MIT",
@@ -17,8 +17,10 @@
     "body-parser": "^1.18.3",
     "cheerio": "^1.0.0-rc.2",
     "cookie-parser": "^1.4.3",
+    "cron": "^1.3.0",
     "express": "^4.16.3",
     "express-http-proxy": "^1.2.0",
+    "helmet": "^3.13.0",
     "html2json": "^1.0.2",
     "md5": "^2.2.1",
     "node-rest-client": "^3.1.0",

@@ -192,18 +192,22 @@ class CloudantDb {
             }
 
             default: {
-              const verror = new Verror({
-                name: 'DatabaseDriverError',
-                cause: err,
-                info: {
-                  dbName: this.name,
-                  docName: id,
-                },
-              }, `Failed to get from database ${this.name}`);
+              if (err.error === 'not_found') {
+                resolve({});
+              } else {
+                const verror = new Verror({
+                  name: 'DatabaseDriverError',
+                  cause: err,
+                  info: {
+                    dbName: this.name,
+                    docName: id,
+                  },
+                }, `Failed to get from database ${this.name}`);
 
-              process.stderr.write(`${verror}\n`);
-              reject(verror);
-              break;
+                process.stderr.write(`${verror}\n`);
+                reject(verror);
+                break;
+              }
             }
           }
         });

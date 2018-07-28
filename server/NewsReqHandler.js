@@ -1,4 +1,3 @@
-const NodeRestClient = require('node-rest-client').Client;
 const Cheerio = require('cheerio');
 const Config = require('./Config');
 

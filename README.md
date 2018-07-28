@@ -2,9 +2,10 @@ Die inoffizielle Pius App für iPhone bietet für Schülerinnen und Schülern de
 
 Welche Funktionen gibt es?
 
-- aktueller Vertretungsplan
-- Nach Kursen gefilterter Vertretungsplan
-- Aktuelle News der Schule
-- Einfacher Einblick in den Terminkalender des Pius Gymnasium
-- Schneller Zugriff auf die offizielle Website
-- Offline Abfrage des Vertretungsplans
+* aktueller Vertretungsplan
+* Nach Kursen gefilterter Vertretungsplan
+* Aktuelle News der Schule
+* Einfacher Einblick in den Terminkalender des Pius Gymnasium mit Suchfunktion
+* Schneller Zugriff auf die offizielle Website
+* Offline Abfrage des Vertretungsplans
+* Ein Widget, das Dir schnell Deine nächste Vertretungsstunde anzeigt

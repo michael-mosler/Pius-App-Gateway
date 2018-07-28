@@ -171,31 +171,24 @@ class VertretungsplanHandler {
       } else {
         this.vertretungsplan.dateItems.push(new DateItem(json.text));
       }
-    }
-    else if (json.node === 'text' && json.text.match(/Letzte Aktualisierung:/) && !this.vertretungsplan.lastUpdate) {
+    } else if (json.node === 'text' && json.text.match(/Letzte Aktualisierung:/) && !this.vertretungsplan.lastUpdate) {
       this.vertretungsplan.lastUpdate = json.text.replace(/[()]/g, '');
-    }
-    else if (json.node === 'text' && json.text.match(/^Heute ist/)) {
+    } else if (json.node === 'text' && json.text.match(/^Heute ist/)) {
       this.vertretungsplan.tickerText = json.text;
-    }
-    else if ((parent && parent.tag === 'th') && json.node === 'text' && json.text.match(/^((\d[A-E])|(Q[12])|(EF)|(IK)|(VT)|(HW))/)) {
+    } else if ((parent && parent.tag === 'th') && json.node === 'text' && json.text.match(/^((\d[A-E])|(Q[12])|(EF)|(IK)|(VT)|(HW))/)) {
       this.vertretungsplan.currentDateItem.gradeItems.push(new GradeItem(json.text));
-    }
-    else if (json.attr && json.attr.class instanceof Array && json.attr.class[0] === 'vertretung' && json.attr.class[1] === 'neu') {
+    } else if (json.attr && json.attr.class instanceof Array && json.attr.class[0] === 'vertretung' && json.attr.class[1] === 'neu') {
       const text = VertretungsplanHandler.mergeSubTextItems(json);
       this.vertretungsplan.currentDateItem.currentGradeItem.currentVertretungsplanItem.detailItems.push(text.replace(/\s\s+/, ' '));
       isInItemList = true;
-    }
-    else if (json.attr && json.attr.class instanceof Array && json.attr.class[0] === 'eva') {
+    } else if (json.attr && json.attr.class instanceof Array && json.attr.class[0] === 'eva') {
       const text = VertretungsplanHandler.mergeSubTextItems(json);
-      this.vertretungsplan.currentDateItem.currentGradeItem.currentVertretungsplanItem.detailItems.push(text.replace(/\s\s+/, ' '))
-    }
-    else if (json.attr && json.attr.class === 'vertretung') {
+      this.vertretungsplan.currentDateItem.currentGradeItem.currentVertretungsplanItem.detailItems.push(text.replace(/\s\s+/, ' '));
+    } else if (json.attr && json.attr.class === 'vertretung') {
       const text = VertretungsplanHandler.mergeSubTextItems(json);
       this.vertretungsplan.currentDateItem.currentGradeItem.currentVertretungsplanItem.detailItems.push(text.replace(/\s\s+/, ' '));
       isInItemList = true;
-    }
-    else if (json.node === 'text' && this.vertretungsplan.tickerText && this.vertretungsplan.dateItems.length === 0) {
+    } else if (json.node === 'text' && this.vertretungsplan.tickerText && this.vertretungsplan.dateItems.length === 0) {
       this.vertretungsplan.additionalText = json.text;
     }
 
@@ -233,8 +226,8 @@ class VertretungsplanHandler {
     // noinspection JSUnresolvedFunction
     this.client.get(vertretungsplanURL, {
       headers: {
-        'Authorization': req.header('authorization')
-      }
+        'Authorization': req.header('authorization'),
+      },
     }, (data, response) => {
       let json;
       if (response.statusCode === 200) {
@@ -275,10 +268,10 @@ class VertretungsplanHandler {
       url: 'http://pius-gymnasium.de/vertretungsplan/',
       headers: {
         'Authorization': req.header('authorization'),
-      }
+      },
     };
 
-    request.head(options, (err, response) => {
+    request.head(options, (err, response) => { // eslint-disable-line handle-callback-err
       res.status(response.statusCode).end();
     });
   }
