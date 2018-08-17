@@ -2,6 +2,7 @@ const apn = require('apn');
 const Config = require('./Config');
 const PushEventEmitter = require('./PushEventEmitter');
 const DeviceTokenManager = require('./DeviceTokenManager');
+const VertretungsplanHelper = require('./VertretungsplanHelper');
 
 /**
  * This class on instantiation registers on 'push' event. When such an event is received
@@ -40,7 +41,7 @@ class Pusher {
    * @private
    */
   condApnConnectionShutdown() {
-    if (this.pendingNotifications === 0) {
+    if (this.pendingNotifications === 0 && this.apnProvider) {
       console.log(`No pending notification left, shutting down connection to APN`);
       this.apnProvider.shutdown();
       this.apnProvider = null;
@@ -53,55 +54,61 @@ class Pusher {
    * @param {Object} changeListItem - Item with information on current change
    */
   push(changeListItem) {
-    this.pendingNotifications += 1;
-    console.log(`Pushing for ${changeListItem.grade}, pending notifications: ${this.pendingNotifications}`);
+    console.log(`Pushing for ${changeListItem.grade}`);
 
     this.deviceTokenManager.getDeviceTokens(changeListItem.grade)
-      .then((token) => {
-        if (token.docs.length > 0) {
-          if (!this.apnProvider) {
-            this.apnProvider = new apn.Provider(this.options);
+      .then((device) => {
+        if (device.docs.length > 0) {
+          const deltaList = VertretungsplanHelper.delta(changeListItem);
+
+          if (deltaList.length > 0) {
+            this.pendingNotifications += 1;
+            console.log(`# of pending notifications is ${this.pendingNotifications}`);
+
+            // Connect to APN service if not done so already.
+            if (!this.apnProvider) {
+              this.apnProvider = new apn.Provider(this.options);
+            }
+
+            // Get all device tokens, these are needed for sending the push notification.
+            const deviceTokens = device.docs.map(item => item._id);
+
+            // Map to lookup revision id by device token. This will be needed for housekeeping.
+            const revMap = new Map();
+            device.docs.forEach(item => revMap.set(item._id, item._rev));
+
+            // This is our push notification.
+            const notification = new apn.Notification();
+            notification.expiry = Math.floor(Date.now() / 1000) + 3600; // Expires 1 hour from now.
+            notification.category = 'substitution-schedule.changed';
+            notification.topic = 'de.rmkrings.piusapp';
+            notification.sound = 'default';
+            notification.title = 'Dein Vertretungsplan hat sich geändert!';
+            notification.body = `Es gibt ${deltaList.length} Änderung${(deltaList.count > 1) ? 'en' : ''} an Deinem Vertretungsplan.`;
+            notification.payload = { deltaList };
+
+            this.apnProvider.send(notification, deviceTokens)
+              .then((result) => {
+                console.log(result);
+
+                const failedList = result.failed
+                  .filter(item => item.response)
+                  .map(item => ({ deviceToken: item.device, _rev: revMap.get(item.device), reason: item.response.reason }));
+                this.housekeeping(failedList);
+
+                this.pendingNotifications -= 1;
+                this.condApnConnectionShutdown();
+              })
+              .catch((err) => {
+                process.stderr.write(`Sending APN failed with rejected promise: ${err}`);
+                this.pendingNotifications -= 1;
+                this.condApnConnectionShutdown();
+              });
           }
-
-          const deviceTokens = token.docs.map(item => item._id);
-
-          // Map to lookup revision id by device token.
-          const revMap = new Map();
-          token.docs.forEach(item => revMap.set(item._id, item._rev));
-
-          const notification = new apn.Notification();
-          notification.expiry = Math.floor(Date.now() / 1000) + 3600; // Expires 1 hour from now.
-          notification.category = 'substitution-schedule.changed';
-          notification.topic = 'de.rmkrings.piusapp';
-          notification.sound = 'default';
-          // notification.contentAvailable = 1;
-          notification.title = 'Dein Vertretungsplan hat sich geändert!';
-          notification.body = 'Es gibt 4 Änderungen in Deinem Vertretungsplan.';
-          // notification.mutableContent = 1;
-          // notification.payload = { digest };
-
-          this.apnProvider.send(notification, deviceTokens)
-            .then((result) => {
-              console.log(result);
-
-              const failedList = result.failed
-                .filter(item => item.response)
-                .map(item => ({ deviceToken: item.device, _rev: revMap.get(item.device), reason: item.response.reason }));
-              this.housekeeping(failedList);
-              this.pendingNotifications -= 1;
-              this.condApnConnectionShutdown();
-            })
-            .catch((err) => {
-              process.stderr.write(`Sending APN failed with rejected promise: ${err}`);
-              this.pendingNotifications -= 1;
-              this.condApnConnectionShutdown();
-            });
         }
       })
       .catch((err) => {
         process.stderr.write(`Getting device token failed with rejected promise: ${err}`);
-        this.pendingNotifications -= 1;
-        this.condApnConnectionShutdown();
       });
   }
 }

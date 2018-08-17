@@ -24,6 +24,10 @@ class Config {
     ];
   }
 
+  static get upperGrades() {
+    return ['EF', 'Q1', 'Q2'];
+  }
+
   static get upsMap() {
     const upsMap = new Map();
     const vcapServices = JSON.parse(process.env.VCAP_SERVICES);

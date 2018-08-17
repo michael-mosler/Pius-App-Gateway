@@ -19,7 +19,7 @@ const vertretungsplanURL = 'http://pius-gymnasium.de/vertretungsplan/';
 class VertretungsplanItem {
   constructor() {
     this.detailItems = [];
-    this.vertretungsplan = new Vertretungsplan();
+    // this.vertretungsplan = new Vertretungsplan();
   }
 }
 
