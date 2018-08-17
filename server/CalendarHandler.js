@@ -59,7 +59,8 @@ class Calendar {
 class CalendarHandler {
   constructor() {
     this.client = new NodeRestClient();
-    this.calendar = null;
+    this.calendar = new Calendar();
+    ;
   }
 
   /**
@@ -155,7 +156,6 @@ class CalendarHandler {
     this.client.get(calendarURL, (data, response) => {
       let json;
       if (response.statusCode === 200) {
-        this.calendar = new Calendar();
         const strData = data.toString();
         const digest = md5(strData);
         json = Html2Json(strData);

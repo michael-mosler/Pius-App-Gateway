@@ -1,4 +1,6 @@
 .idea
+apn-credentials.json
+pius-vertretungsplan-credentials.json
 doc
 node_modules
 pius-gateway.env

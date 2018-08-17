@@ -3,6 +3,12 @@ const NodeRestClient = require('node-rest-client').Client;
 const Html2Json = require('html2json').html2json;
 const request = require('request');
 const md5 = require('md5');
+const clone = require('clone');
+const PushEventEmitter = require('./PushEventEmitter');
+
+const Config = require('./Config');
+const BasicAuthProvider = require('./BasicAuthProvider');
+const SubstitionScheduleHashessDb = require('./SubstitutionScheduleHashesDb');
 
 const vertretungsplanURL = 'http://pius-gymnasium.de/vertretungsplan/';
 
@@ -13,6 +19,7 @@ const vertretungsplanURL = 'http://pius-gymnasium.de/vertretungsplan/';
 class VertretungsplanItem {
   constructor() {
     this.detailItems = [];
+    this.vertretungsplan = new Vertretungsplan();
   }
 }
 
@@ -122,7 +129,7 @@ class Vertretungsplan {
 class VertretungsplanHandler {
   constructor() {
     this.client = new NodeRestClient();
-    this.vertretungsplan = null;
+    this.vertretungsplan = new Vertretungsplan();
   }
 
   /**
@@ -229,7 +236,6 @@ class VertretungsplanHandler {
         'Authorization': req.header('authorization'),
       },
     }, (data, response) => {
-      let json;
       if (response.statusCode === 200) {
         const strData = data.toString();
         const digest = md5(strData);
@@ -239,8 +245,7 @@ class VertretungsplanHandler {
         if (digest === req.query.digest) {
           res.status(304).end();
         } else {
-          this.vertretungsplan = new Vertretungsplan();
-          json = Html2Json(strData);
+          const json = Html2Json(strData);
           this.transform(json);
 
           // noinspection JSUnresolvedVariable
@@ -254,6 +259,60 @@ class VertretungsplanHandler {
         res.status(response.statusCode).end();
       }
     });
+  }
+
+  /**
+   * This method requests the latest substitution schedule and extracts sub-schedule for all
+   * registered grades. It then computes MD5 hash for each of these sub-schedules and
+   * compares it to the one stored in backing store. When a change is detected it fires
+   * a push-event which receives the grade for which an event was detected and the MD5
+   * hash that apps should have locally to be to date.
+   */
+  checker() {
+    const pushEventEmitter = new PushEventEmitter();
+    const basicAuthProvider = new BasicAuthProvider();
+
+    basicAuthProvider.getAuthInfo()
+      .then((authInfo) => {
+        this.client.get(vertretungsplanURL, {
+          headers: {
+            'Authorization': `Basic ${authInfo}`,
+          },
+        }, (data, response) => {
+          if (response.statusCode === 200) {
+            const substitionScheduleHashessDb = new SubstitionScheduleHashessDb();
+            const strData = data.toString();
+
+            const json = Html2Json(strData);
+            this.transform(json);
+
+            const checkList = [];
+            Config.grades.forEach((grade) => {
+              // Clone vertretungsplan as filter() modifies it in place.
+              const filteredVertretungsplan = clone(this.vertretungsplan);
+              filteredVertretungsplan.filter(grade);
+
+              // Compute sub-hash for this special schedule and put it on our list.
+              const subHash = md5(JSON.stringify(filteredVertretungsplan));
+              checkList.push({ grade, hash: subHash, substitutionSchedule: filteredVertretungsplan });
+            });
+
+            // Cross check our list and emit push event for all items which have changed.
+            substitionScheduleHashessDb.crossCheck(checkList)
+              .then((changeList) => {
+                changeList.forEach(item => pushEventEmitter.emit('push', item));
+              })
+              .catch((err) => {
+                process.stderr.write(`Checker failed with a rejected promise when cross checking: ${err}`);
+              });
+          } else {
+            process.stderr.write(`Checker failed to get latest data with status ${response.statusCode}\n`);
+          }
+        });
+      })
+      .catch((err) => {
+        process.stderr.write(`Check failed with a rejected promise: ${err}\n`);
+      });
   }
 
   /**

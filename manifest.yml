@@ -7,6 +7,6 @@ applications:
   - route: pius-gateway.eu-de.mybluemix.net
   command: node server/server_app.js
   env:
-    NODE_ENV: dev
+    NODE_ENV: production
     BASE_URL: https://pius-gateway.eu-de.mybluemix.net
   stack: cflinuxfs2

@@ -9,6 +9,6 @@ applications:
   services:
   - Cloudant
   env:
-    NODE_ENV: dev
+    NODE_ENV: production
     BASE_URL: https://pius-gateway-ng.eu-gb.mybluemix.net
   stack: cflinuxfs2

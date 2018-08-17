@@ -9,14 +9,23 @@ const Config = require('./Config');
 const NewsReqHandler = require('./NewsReqHandler');
 const VertretungsplanHandler = require('./VertretungsplanHandler');
 const CalendarHandler = require('./CalendarHandler');
+const Pusher = require('./Pusher');
 
 const DeviceTokenManager = require('./DeviceTokenManager');
 
+/**
+ * This class implements our middleware. It create an Express middleware and registers
+ * all routes within an Express router. It also sets up a cron job that regularly
+ * checks substitution schedule for changes. Finally it puts itself into listen
+ * and waits for incoming requests.
+ * When changes to substitution schedule are detected push notifications are sent
+ * to all registered devices subscribed to to the grade where a change occured.
+ */
 class App {
   constructor() {
     this.config = new Config();
 
-    App.initApp();
+    this.initApp();
     this.expressApp = App.initMiddleware();
 
     this.deviceTokenManager = new DeviceTokenManager();
@@ -24,11 +33,22 @@ class App {
     this.expressApp.use('/', this.router);
   }
 
-  static initApp() {
+  /**
+   * Basic App initialisation.
+   * @private
+   */
+  initApp() {
     process.on('SIGTERM', () => process.exit(0));
     process.on('SIGINT', () => process.exit(0));
 
-    const cronjob = new Cron.CronJob('0 0,5,10,15,20,25,30,23,40,45,50,55 * * * *', () => console.log('Hi, that\'s your cron job'), true, 'Europe/Berlin'); // eslint-disable-line no-unused-vars
+    this.pusher = new Pusher();
+
+    if (process.env.NODE_ENV === 'production') {
+      const cronjob = new Cron.CronJob('0 0,5,10,15,20,25,30,23,40,45,50,55 * * * *', () => { // eslint-disable-line no-unused-vars
+        const vertretungsplanHandler = new VertretungsplanHandler();
+        vertretungsplanHandler.checker();
+      }, true, 'Europe/Berlin');
+    }
   }
 
   /**
@@ -99,6 +119,20 @@ class App {
           : proxyResData;
       },
     }));
+
+    // DEBUG routes are available in dev only.
+    if (process.env.NODE_ENV === 'dev') {
+      // Trigger push notification.
+      router.post('/checker', (req, res) => {
+        console.log('/checker');
+        const vertretungsplanHandler = new VertretungsplanHandler();
+        vertretungsplanHandler.checker();
+
+        res
+          .status(200)
+          .end();
+      });
+    }
 
     return router;
   }
