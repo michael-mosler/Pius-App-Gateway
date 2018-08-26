@@ -28,15 +28,6 @@ class Pusher {
   }
 
   /**
-   * Remove all device token for which APNS has reported an error.
-   * @param {Array<Object>} failedList
-   * @private
-   */
-  async housekeeping(failedList) {
-    await this.deviceTokenManager.housekeeping(failedList);
-  }
-
-  /**
    * When there are no pending notification events shutdown connection to APN.
    * @private
    */
@@ -59,17 +50,22 @@ class Pusher {
     this.deviceTokenManager.getDeviceTokens(changeListItem.grade)
       .then((device) => {
         if (device.docs.length > 0) {
-          const deltaList = VertretungsplanHelper.delta(changeListItem);
+          // For upper grades we need to send notifications per device.
+          if (Config.upperGrades.includes(changeListItem.grade)) {
+            // Get all device tokens, these are needed for sending the push notification.
+            const devices = device.docs.map(item => ({ _id: item._id, _rev: item._rev, courseList: item.courseList }));
 
-          if (deltaList.length > 0) {
-            this.pendingNotifications += 1;
-            console.log(`# of pending notifications is ${this.pendingNotifications}`);
+            devices.forEach(device => {
+              console.log(`... ${device._id}`);
+              const deviceTokens = [device._id];
+              const revMap = new Map();
+              revMap.set(device._id, device._rev);
 
-            // Connect to APN service if not done so already.
-            if (!this.apnProvider) {
-              this.apnProvider = new apn.Provider(this.options);
-            }
-
+              const deltaList = VertretungsplanHelper.delta(changeListItem, device.courseList || []);
+              console.log(deltaList);
+              this.sendPushNotification(deviceTokens, revMap, deltaList, changeListItem.grade);
+            });
+          } else {
             // Get all device tokens, these are needed for sending the push notification.
             const deviceTokens = device.docs.map(item => item._id);
 
@@ -77,39 +73,69 @@ class Pusher {
             const revMap = new Map();
             device.docs.forEach(item => revMap.set(item._id, item._rev));
 
-            // This is our push notification.
-            const notification = new apn.Notification();
-            notification.expiry = Math.floor(Date.now() / 1000) + 3600; // Expires 1 hour from now.
-            notification.category = 'substitution-schedule.changed';
-            notification.topic = 'de.rmkrings.piusapp';
-            notification.sound = 'default';
-            notification.title = 'Dein Vertretungsplan hat sich geändert!';
-            notification.body = `Es gibt ${deltaList.length} Änderung${(deltaList.count > 1) ? 'en' : ''} an Deinem Vertretungsplan.`;
-            notification.payload = { deltaList };
-
-            this.apnProvider.send(notification, deviceTokens)
-              .then((result) => {
-                console.log(result);
-
-                const failedList = result.failed
-                  .filter(item => item.response)
-                  .map(item => ({ deviceToken: item.device, _rev: revMap.get(item.device), reason: item.response.reason }));
-                this.housekeeping(failedList);
-
-                this.pendingNotifications -= 1;
-                this.condApnConnectionShutdown();
-              })
-              .catch((err) => {
-                process.stderr.write(`Sending APN failed with rejected promise: ${err}`);
-                this.pendingNotifications -= 1;
-                this.condApnConnectionShutdown();
-              });
+            const deltaList = VertretungsplanHelper.delta(changeListItem);
+            console.log(deltaList);
+            this.sendPushNotification(deviceTokens, revMap, deltaList, changeListItem.grade);
           }
         }
       })
       .catch((err) => {
-        process.stderr.write(`Getting device token failed with rejected promise: ${err}`);
+        console.log(`Getting device token failed with rejected promise: ${err}`);
       });
+  }
+
+  /**
+   *
+   * @param {Array<String>} deviceTokens
+   * @param {Map<String, String>} revMap
+   * @param {Array<Object>} deltaList
+   * @param {String} grade
+   * @private
+   */
+  async sendPushNotification(deviceTokens, revMap, deltaList, grade) {
+    console.log(`sendPushNotification(): ${deltaList.length}`);
+
+    if (deltaList.length > 0) {
+      this.pendingNotifications += 1;
+      try {
+        // Connect to APN service if not done so already.
+        if (!this.apnProvider) {
+          console.log('Getting APN connection');
+          this.apnProvider = new apn.Provider(this.options);
+        }
+
+        console.log(`# of pending notifications is ${this.pendingNotifications}`);
+
+        // This is our push notification.
+        const notification = new apn.Notification();
+        notification.expiry = Math.floor(Date.now() / 1000) + 3600; // Expires 1 hour from now.
+        notification.category = 'substitution-schedule.changed';
+        notification.topic = 'de.rmkrings.piusapp';
+        notification.sound = 'default';
+        // notification.title = 'Dein Vertretungsplan hat sich geändert!';
+        notification.body = `Es gibt ${deltaList.length} Änderung${(deltaList.count > 1) ? 'en' : ''} an Deinem Vertretungsplan.`;
+        notification.payload = { deltaList };
+
+        try {
+          const result = await this.apnProvider.send(notification, deviceTokens);
+          console.log(result);
+
+          const failedList = result.failed
+            .filter(item => item.response)
+            .map(item => ({ deviceToken: item.device, _rev: revMap.get(item.device), reason: item.response.reason }));
+          await this.deviceTokenManager.housekeeping(failedList);
+
+          this.pendingNotifications -= 1;
+          this.condApnConnectionShutdown();
+        } catch (err) {
+          console.log(`Sending APN failed with exception promise: ${err}`);
+          this.pendingNotifications -= 1;
+          this.condApnConnectionShutdown();
+        };
+      } catch (err) {
+        console.log(`Problem when sending push notficication for grade ${grade}: ${err}`);
+      }
+    }
   }
 }
 

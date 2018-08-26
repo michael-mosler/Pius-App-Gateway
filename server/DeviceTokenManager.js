@@ -29,7 +29,7 @@ class DeviceTokemManager {
       .then(newDocument => this.deviceTokensDb.insertDocument(newDocument))
       .then(() => res.status(200).end())
       .catch((err) => {
-        process.stderr.write(`${err}\n`);
+        console.log(`${err}\n`);
         res.status(500).end();
       });
   }
@@ -50,7 +50,7 @@ class DeviceTokemManager {
       Promise.all(promises)
         .then(() => resolve())
         .catch((err) => {
-          process.stderr.write(`Destroying failed device tokens failed with rejected promise: ${err}\n`);
+          console.log(`Destroying failed device tokens failed with rejected promise: ${err}\n`);
           resolve();
         });
     });

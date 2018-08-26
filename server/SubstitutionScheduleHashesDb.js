@@ -34,12 +34,12 @@ class SubstitutionScheduleHashesDb extends CloudantDb {
           Promise.all(promises)
             .then(() => resolve(newChangeList))
             .catch((err) => {
-              process.stderr.write(`Problem when updating substitution schedule hashes: ${err}`);
+              console.log(`Problem when updating substitution schedule hashes: ${err}`);
               resolve(newChangeList);
             });
         })
         .catch((err) => {
-          process.stderr.write(`Substitution schedule hashes crosscheck failed with promise rejection: ${err}\n`);
+          console.log(`Substitution schedule hashes crosscheck failed with promise rejection: ${err}\n`);
           reject(err);
         });
     });

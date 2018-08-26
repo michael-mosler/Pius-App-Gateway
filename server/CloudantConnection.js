@@ -43,7 +43,7 @@ class CloudantConnection {
         },
       }, 'Failed to connect to CloudantDB');
 
-      process.stderr.write(`${verror}\n`);
+      console.log(`${verror}\n`);
       throw verror;
     }
   }

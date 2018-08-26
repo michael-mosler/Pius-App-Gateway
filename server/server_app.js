@@ -43,12 +43,10 @@ class App {
 
     this.pusher = new Pusher();
 
-    if (process.env.NODE_ENV === 'production') {
-      const cronjob = new Cron.CronJob('0 0,5,10,15,20,25,30,23,40,45,50,55 * * * *', () => { // eslint-disable-line no-unused-vars
-        const vertretungsplanHandler = new VertretungsplanHandler();
-        vertretungsplanHandler.checker();
-      }, true, 'Europe/Berlin');
-    }
+    const cronjob = new Cron.CronJob('0 0,5,10,15,20,25,30,35,40,45,50,55 * * * *', () => { // eslint-disable-line no-unused-vars
+      const vertretungsplanHandler = new VertretungsplanHandler();
+      vertretungsplanHandler.checker();
+    }, true, 'Europe/Berlin');
   }
 
   /**
@@ -124,7 +122,7 @@ class App {
     if (process.env.NODE_ENV === 'dev') {
       // Trigger push notification.
       router.post('/checker', (req, res) => {
-        console.log('/checker');
+        console.log('POST on /checker');
         const vertretungsplanHandler = new VertretungsplanHandler();
         vertretungsplanHandler.checker();
 
@@ -145,7 +143,7 @@ class App {
       this.expressApp.listen(this.config.port);
       console.log(`Application is listening at: ${this.config.port}`);
     } catch (err) {
-      process.stderr.write(`The middleware failed to start with error ${err}\n`);
+      console.log(`The middleware failed to start with error ${err}\n`);
       process.exit(-1);
     }
   }

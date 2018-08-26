@@ -68,7 +68,7 @@ class CloudantDb {
         },
       }, `Failed to connect to databse ${this.name}`);
 
-      process.stderr.write(`${verror}\n`);
+      console.log(`${verror}\n`);
       throw verror;
     }
   }
@@ -100,7 +100,7 @@ class CloudantDb {
             },
           }, `Failed to create database ${this.name}`);
 
-          process.stderr.write(`${verror}\n`);
+          console.log(`${verror}\n`);
           reject(verror);
         } else {
           resolve(this);
@@ -133,7 +133,7 @@ class CloudantDb {
             },
           }, `Failed to drop database ${this.name}`);
 
-          process.stderr.write(`${verror}\n`);
+          console.log(`${verror}\n`);
           reject(verror);
         } else {
           this.connected = false;
@@ -186,7 +186,7 @@ class CloudantDb {
                 },
               }, `Retry limit in exceeded when getting from database ${this.name}`);
 
-              process.stderr.write(`${verror}\n`);
+              console.log(`${verror}\n`);
               reject(verror);
               break;
             }
@@ -204,7 +204,7 @@ class CloudantDb {
                   },
                 }, `Failed to get from database ${this.name}`);
 
-                process.stderr.write(`${verror}\n`);
+                console.log(`${verror}\n`);
                 reject(verror);
                 break;
               }
@@ -268,7 +268,7 @@ class CloudantDb {
                 },
               }, `Design name ${designName} or view ${viewName} does not exist in database ${this.name}`);
 
-              process.stderr.write(`${verror}\n`);
+              console.log(`${verror}\n`);
               reject(verror);
               break;
             }
@@ -287,7 +287,7 @@ class CloudantDb {
                 },
               }, `Retry limit in exceeded when reading from view in ${viewName} in design ${designName} and database ${this.name}`);
 
-              process.stderr.write(`${verror}\n`);
+              console.log(`${verror}\n`);
               reject(verror);
               break;
             }
@@ -303,7 +303,7 @@ class CloudantDb {
                 },
               }, `Failed to read from view ${viewName} in design ${designName} and database ${this.name}`);
 
-              process.stderr.write(`${verror}\n`);
+              console.log(`${verror}\n`);
               reject(verror);
               break;
             }
@@ -375,7 +375,7 @@ class CloudantDb {
               break;
             }
           }
-          process.stderr.write(`${verror}\n`);
+          console.log(`${verror}\n`);
           reject(verror);
         });
       });
@@ -412,7 +412,7 @@ class CloudantDb {
                 },
               }, `Retry limit exceeded when finding on database ${this.name}`);
 
-              process.stderr.write(`${verror}\n`);
+              console.log(`${verror}\n`);
               reject(verror);
               break;
             }
@@ -425,7 +425,7 @@ class CloudantDb {
                 },
               }, `Failed to find on database ${this.name}`);
 
-              process.stderr.write(`${verror}\n`);
+              console.log(`${verror}\n`);
               reject(verror);
               break;
             }
@@ -467,7 +467,7 @@ class CloudantDb {
                 },
               }, `Retry limit exceeded when deleting document from databse ${this.name}`);
 
-              process.stderr.write(`${verror}\n`);
+              console.log(`${verror}\n`);
               reject(verror);
               break;
             }
@@ -481,7 +481,7 @@ class CloudantDb {
                 },
               }, `Failed to delete document from database ${this.name}`);
 
-              process.stderr.write(`${verror}\n`);
+              console.log(`${verror}\n`);
               reject(verror);
               break;
             }
@@ -525,7 +525,7 @@ class CloudantDb {
                 },
               }, `Retry limit exceeded when bulk inserting documents into database ${this.name}`);
 
-              process.stderr.write(`${verror}\n`);
+              console.log(`${verror}\n`);
               reject(verror);
               break;
             }
@@ -539,7 +539,7 @@ class CloudantDb {
                 },
               }, `Failed to bulk insert documents into database ${this.name}`);
 
-              process.stderr.write(`${verror}\n`);
+              console.log(`${verror}\n`);
               reject(verror);
               break;
             }

@@ -269,6 +269,7 @@ class VertretungsplanHandler {
    * hash that apps should have locally to be to date.
    */
   checker() {
+    console.log('##### Checking for new changes to push...');
     const pushEventEmitter = new PushEventEmitter();
     const basicAuthProvider = new BasicAuthProvider();
 
@@ -303,16 +304,18 @@ class VertretungsplanHandler {
                 changeList.forEach(item => pushEventEmitter.emit('push', item));
               })
               .catch((err) => {
-                process.stderr.write(`Checker failed with a rejected promise when cross checking: ${err}`);
+                console.log(`Checker failed with a rejected promise when cross checking: ${err}`);
               });
           } else {
-            process.stderr.write(`Checker failed to get latest data with status ${response.statusCode}\n`);
+            console.log(`Checker failed to get latest data with status ${response.statusCode}\n`);
           }
         });
       })
       .catch((err) => {
-        process.stderr.write(`Check failed with a rejected promise: ${err}\n`);
+        console.log(`Check failed with a rejected promise: ${err}\n`);
       });
+
+    console.log('##### Checking for new changes to push... DONE');
   }
 
   /**
