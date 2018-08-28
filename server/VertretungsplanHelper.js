@@ -76,17 +76,17 @@ class VertretungsplanHelper {
         const secondCoursePos = currentCourse.search('&rarr;') + 6;
         const secondCourse = currentCourse.substring(secondCoursePos);
 
-        // Messe is substituted by another course and not just by an empty item.
+        // Messe is substituted by by no course.
         if (!secondCourse || secondCourse.search(/^[A-Z]/) === -1) {
           return true;
         }
 
-        // Alternate definition of empty course, e.g. ---
-        if (secondCourse.search(/^[^A-Z]/) !== -1) {
-          return true;
-        }
-
         currentCourse = secondCourse;
+      }
+
+      // Alternate definition of empty course, e.g. ---
+      if (currentCourse.search(/^[^A-Z]/) !== -1) {
+        return true;
       }
 
       // The real filter.
