@@ -3,8 +3,9 @@ const Config = require('./Config');
 
 class NewsReqHandler {
   /**
-   *
-   * @param data
+   * Extracts news section from Pius home page.
+   * @param {Object} data - Web page content
+   * @returns {String} HTML page with header removed
    * @static
    * @private
    */
@@ -26,9 +27,10 @@ class NewsReqHandler {
   }
 
   /**
-   *
-   * @param data
-   * @returns {*|void}
+   * Converts page into Cheerio DOM tree and rewrites all hrefs.
+   * @param {Object} data - Page to convert
+   * @returns {String} HTML page with header removed
+   * @static
    */
   static pager(data) {
     const config = new Config();
@@ -39,10 +41,12 @@ class NewsReqHandler {
   }
 
   /**
-   *
-   * @param $
-   * @param config
+   * Rewrites all href and src attributes to refer to Pius-Gateway service. Rewrite happens
+   * in place.
+   * @param {Object} $ - Cheerio DOM tree handle
+   * @param {Config} config - App's config class instance
    * @private
+   * @static
    */
   static rewriteRefs($, config) {
     $('script').each(function () {
@@ -79,9 +83,9 @@ class NewsReqHandler {
   }
 
   /**
-   *
-   * @param data
-   * @returns {*|void}
+   * Removes Pius News page's standard header.
+   * @param {Object} data - Data as read from Pius web page.
+   * @returns {String} HTML page with header removed
    */
   static removeStandardHeader(data) {
     const config = new Config();

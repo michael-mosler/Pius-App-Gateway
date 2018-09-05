@@ -1,3 +1,4 @@
+const util = require('util');
 const apn = require('apn');
 const Config = require('./Config');
 const PushEventEmitter = require('./PushEventEmitter');
@@ -62,7 +63,7 @@ class Pusher {
               revMap.set(device._id, device._rev);
 
               const deltaList = VertretungsplanHelper.delta(changeListItem, device.courseList || []);
-              console.log(deltaList);
+              console.log(util.inspect(deltaList, { depth: 4 }));
               this.sendPushNotification(deviceTokens, revMap, deltaList, changeListItem.grade);
             });
           } else {
@@ -71,7 +72,7 @@ class Pusher {
 
             // Map to lookup revision id by device token. This will be needed for housekeeping.
             const revMap = new Map();
-            device.docs.forEach(item => revMap.set(item._id, item._rev));
+            device.docs.forEach(device => revMap.set(device._id, device._rev));
 
             const deltaList = VertretungsplanHelper.delta(changeListItem);
             console.log(deltaList);
@@ -80,7 +81,7 @@ class Pusher {
         }
       })
       .catch((err) => {
-        console.log(`Getting device token failed with rejected promise: ${err}`);
+        console.log(`Processing push notification failed with rejected promise: ${err} at ${err.stack}`);
       });
   }
 

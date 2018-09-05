@@ -258,7 +258,19 @@ class VertretungsplanHandler {
       } else {
         res.status(response.statusCode).end();
       }
-    });
+    })
+      .on('requestTimeout', (err) => {
+        console.log(`Get request on substitution schedule has timed out: ${err}`);
+        res.status(408).end();
+      })
+      .on('responseTimeout', (err) => {
+        console.log(`Get response on substitution schedule has timed out: ${err}`);
+        res.status(408).end();
+      })
+      .on('error', (err) => {
+        console.log(`Error when getting substitution schedule: ${err}`);
+        res.status(503).end();
+      });
   }
 
   /**
@@ -309,7 +321,19 @@ class VertretungsplanHandler {
           } else {
             console.log(`Checker failed to get latest data with status ${response.statusCode}\n`);
           }
-        });
+        })
+          .on('requestTimeout', (err) => {
+            console.log(`Get request on substitution schedule has timed out: ${err}`);
+            console.log('Skipping this push run.');
+          })
+          .on('responseTimeout', (err) => {
+            console.log(`Get response on substitution schedule has timed out: ${err}`);
+            console.log('Skipping this push run.');
+          })
+          .on('error', (err) => {
+            console.log(`Error when getting substitution: ${err}`);
+            console.log('Skipping this push run.');
+          });
       })
       .catch((err) => {
         console.log(`Check failed with a rejected promise: ${err}\n`);

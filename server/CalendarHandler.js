@@ -177,7 +177,19 @@ class CalendarHandler {
         // noinspection JSUnresolvedFunction
         res.status(response.statusCode).end();
       }
-    });
+    })
+      .on('requestTimeout', (err) => {
+        console.log(`Get request on calendar has timed out: ${err}`);
+        res.status(408).end();
+      })
+      .on('responseTimeout', (err) => {
+        console.log(`Get response on calendar has timed out: ${err}`);
+        res.status(408).end();
+      })
+      .on('error', (err) => {
+        console.log(`Error when getting calendar: ${err}`);
+        res.status(503).end();
+      });
   }
 }
 

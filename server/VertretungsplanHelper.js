@@ -1,3 +1,4 @@
+const clone = require('clone');
 const Config = require('./Config');
 
 /**
@@ -7,7 +8,8 @@ const Config = require('./Config');
  * @property {Array<String>} detailsOld - Old detail items (for DELETED OR CHANGED)
  */
 class DeltaItem {
-  constructor({ type, detailsNew = null, detailsOld = null }) {
+  constructor({ date, type, detailsNew = null, detailsOld = null }) {
+    this.date = date;
     this.type = type;
     this.detailsNew = detailsNew;
     this.detailsOld = detailsOld;
@@ -106,61 +108,81 @@ class VertretungsplanHelper {
    */
   static delta(changeListItem, courseList = null) {
     const deltaList = [];
-    const newSchedule = changeListItem.substitutionSchedule;
-    const oldSchedule = VertretungsplanHelper.synchronizeSchedule(newSchedule.dateItems[0].title, changeListItem.oldSubstitutionSchedule);
+    const newSchedule = clone(changeListItem.substitutionSchedule);
+    const oldSchedule = clone(VertretungsplanHelper.synchronizeSchedule(newSchedule.dateItems[0].title, changeListItem.oldSubstitutionSchedule));
 
-    for (let dateIndex = 0; dateIndex < newSchedule.dateItems.length; dateIndex++) {
-      const gradeItemsNew = newSchedule.dateItems[dateIndex].gradeItems;
-      const gradeItemsOld = oldSchedule.dateItems[dateIndex].gradeItems;
+    for (let dateIndex = 0; dateIndex < Math.max(newSchedule.dateItems.length, oldSchedule.dateItems.length); dateIndex++) {
+      let titleNew = null;
+      let titleOld = null;
+      let gradeItemsNew, gradeItemsOld;
+
+      if (newSchedule.dateItems[dateIndex]) {
+        titleNew = newSchedule.dateItems[dateIndex].title;
+        gradeItemsNew = newSchedule.dateItems[dateIndex].gradeItems;
+      } else {
+        gradeItemsNew = [];
+      }
+
+      if (oldSchedule.dateItems[dateIndex]) {
+        titleOld = oldSchedule.dateItems[dateIndex].title;
+        gradeItemsOld = oldSchedule.dateItems[dateIndex].gradeItems;
+      } else {
+        gradeItemsOld = [];
+      }
 
       // Both grade item lists are empty.
       if (gradeItemsNew.length === 0 && gradeItemsOld.length === 0) {
         continue;
       }
 
+      // Apply course list filter to itemlist.
+      if (courseList) {
+        if (gradeItemsNew.length > 0) {
+          gradeItemsNew[0].vertretungsplanItems = VertretungsplanHelper.filterByCourselist(gradeItemsNew[0].vertretungsplanItems, courseList);
+        }
+
+        if (gradeItemsOld.length > 0) {
+          gradeItemsOld[0].vertretungsplanItems = VertretungsplanHelper.filterByCourselist(gradeItemsOld[0].vertretungsplanItems, courseList);
+        }
+      }
+
       // New grade item list is empty but old is not
       if (gradeItemsNew.length === 0 && gradeItemsOld.length !== 0) {
-        gradeItemsOld.vertretungsplanItems.forEach(item => deltaList.push(new DeltaItem({ type: 'DELETED', detailsOld: item.detailItems })));
+        gradeItemsOld[0].vertretungsplanItems.forEach(item => deltaList.push(new DeltaItem({ date: titleOld, type: 'DELETED', detailsOld: item.detailItems })));
         continue;
       }
 
       // Old grade item list is empty but new is not.
       if (gradeItemsNew.length !== 0 && gradeItemsOld.length === 0) {
-        gradeItemsNew.vertretungsplanItems.forEach(item => deltaList.push(new DeltaItem({ type: 'ADDED', detailsNew: item.detailItems })));
+        gradeItemsNew[0].vertretungsplanItems.forEach(item => deltaList.push(new DeltaItem({ date: titleNew, type: 'ADDED', detailsNew: item.detailItems })));
         continue;
       }
 
-      // Apply course list filter to itemlist.
-      if (courseList) {
-        gradeItemsNew[0].vertretungsplanItems = VertretungsplanHelper.filterByCourselist(gradeItemsNew[0].vertretungsplanItems, courseList);
-        gradeItemsOld[0].vertretungsplanItems = VertretungsplanHelper.filterByCourselist(gradeItemsOld[0].vertretungsplanItems, courseList);
-      }
-
       // Which lessons are in new list but not in old list? These have been added.
-      let newGradeItemsNew = [];
+      let newVertretungsplanItemsNew = [];
       gradeItemsNew[0].vertretungsplanItems.forEach((newItem) => {
         const index = gradeItemsOld[0].vertretungsplanItems.findIndex(oldItem => oldItem.detailItems[0] === newItem.detailItems[0] && oldItem.detailItems[2] === newItem.detailItems[2]);
         if (index === -1) {
-          deltaList.push(new DeltaItem({ type: 'ADDED', detailsNew: newItem.detailItems }));
+          deltaList.push(new DeltaItem({ date: titleNew, type: 'ADDED', detailsNew: newItem.detailItems }));
         } else {
-          newGradeItemsNew.push(newItem);
+          newVertretungsplanItemsNew.push(newItem);
         }
       });
 
-      gradeItemsNew[0].vertretungsplanItems = newGradeItemsNew;
+      gradeItemsNew[0].vertretungsplanItems = newVertretungsplanItemsNew;
 
       // Which lessons are in old list but not in new? These have been deleted.
-      let newGradeItemsOld = [];
+      let newVertretungsplanItemsOld = [];
       gradeItemsOld[0].vertretungsplanItems.forEach((oldItem) => {
         const index = gradeItemsNew[0].vertretungsplanItems.findIndex(newItem => newItem.detailItems[0] === oldItem.detailItems[0] && newItem.detailItems[2] === oldItem.detailItems[2]);
         if (index === -1) {
-          deltaList.push(new DeltaItem({ type: 'DELETED', detailsOld: oldItem.detailItems }));
+          deltaList.push(new DeltaItem({ date: titleOld, type: 'DELETED', detailsOld: oldItem.detailItems }));
         } else {
-          newGradeItemsOld.push(oldItem);
+          newVertretungsplanItemsOld.push(oldItem);
         }
       });
 
-      gradeItemsOld[0].vertretungsplanItems = newGradeItemsOld;
+      gradeItemsOld[0].vertretungsplanItems = newVertretungsplanItemsOld;
 
       // Compare items that are left in both list. The lists are in sync now, thus we can use
       // a single index.
@@ -169,8 +191,9 @@ class VertretungsplanHelper {
           return a && item === gradeItemsOld[0].vertretungsplanItems[index].detailItems[itemIndex];
         }, true);
 
-        if (!identical) {
-          deltaList.push(new DeltaItem({ type: 'CHANGED', detailsNew: newItem.detailItems, detailsOld: gradeItemsOld[0].vertretungsplanItems[index].detailItems }));
+        // Not identical or EVA has been deleted.
+        if (!identical || gradeItemsNew[0].vertretungsplanItems.length !== gradeItemsOld[0].vertretungsplanItems.length) {
+          deltaList.push(new DeltaItem({ date: titleNew, type: 'CHANGED', detailsNew: newItem.detailItems, detailsOld: gradeItemsOld[0].vertretungsplanItems[index].detailItems }));
         }
       });
     }
