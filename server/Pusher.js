@@ -21,6 +21,7 @@ class Pusher {
         key: Buffer.from(credentials.token.key),
         keyId: credentials.token.keyId,
         teamId: credentials.token.teamId,
+        production: process.env.APN_PRODUCTION === 'true',
       },
     };
 
@@ -86,11 +87,13 @@ class Pusher {
   }
 
   /**
-   *
+   * Send push notification to the given device token list. Any rejected token will
+   * be removed from device-token database. revMap is used to lookup latest known
+   * document revision for deletion. deltaList is sent as payload.
    * @param {Array<String>} deviceTokens
    * @param {Map<String, String>} revMap
-   * @param {Array<Object>} deltaList
-   * @param {String} grade
+   * @param {Array<Object>} deltaList - The deltaList for device tokens
+   * @param {String} grade - Grade the push is for, for error reporting purposes only
    * @private
    */
   async sendPushNotification(deviceTokens, revMap, deltaList, grade) {

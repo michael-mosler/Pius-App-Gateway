@@ -40,13 +40,20 @@ class App {
   initApp() {
     process.on('SIGTERM', () => process.exit(0));
     process.on('SIGINT', () => process.exit(0));
+    process.on('uncaughtException', (err) => {
+      console.log(`Unhandled exception exception: ${err}\n`);
+      process.exit(-1);
+    });
 
     this.pusher = new Pusher();
 
-    const cronjob = new Cron.CronJob('0 0,5,10,15,20,25,30,35,40,45,50,55 * * * *', () => { // eslint-disable-line no-unused-vars
-      const vertretungsplanHandler = new VertretungsplanHandler();
-      vertretungsplanHandler.checker();
-    }, true, 'Europe/Berlin');
+    if (process.env.START_PUSHER === 'true') {
+      console.log('Creating pusher job...');
+      const cronjob = new Cron.CronJob('0 0,5,10,15,20,25,30,35,40,45,50,55 * * * *', () => { // eslint-disable-line no-unused-vars
+        const vertretungsplanHandler = new VertretungsplanHandler();
+        vertretungsplanHandler.checker();
+      }, true, 'Europe/Berlin');
+    }
   }
 
   /**
