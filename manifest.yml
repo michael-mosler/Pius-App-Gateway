@@ -6,7 +6,13 @@ applications:
   routes:
   - route: pius-gateway.eu-de.mybluemix.net
   command: node server/server_app.js
+  services:
+  - Cloudant
+  - apns
+  - pius-vertretungsplan-service
   env:
     NODE_ENV: production
     BASE_URL: https://pius-gateway.eu-de.mybluemix.net
+    START_PUSHER: true
+    APN_PRODUCTION: true
   stack: cflinuxfs2

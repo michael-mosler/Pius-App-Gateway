@@ -4,13 +4,15 @@ applications:
   memory: 128M
   disk_quota: 1024M
   routes:
-  - route: pius-gateway-ng.eu-gb.mybluemix.net
+  - route: pius-gateway-ng.eu-de.mybluemix.net
   command: node server/server_app.js
   services:
   - Cloudant
+  - apns
+  - pius-vertretungsplan-service
   env:
     NODE_ENV: dev
-    BASE_URL: https://pius-gateway-ng.eu-gb.mybluemix.net
+    BASE_URL: https://pius-gateway-ng.eu-de.mybluemix.net
     START_PUSHER: true
     APN_PRODUCTION: false
   stack: cflinuxfs2
