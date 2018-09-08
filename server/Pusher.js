@@ -21,8 +21,8 @@ class Pusher {
         key: Buffer.from(credentials.token.key),
         keyId: credentials.token.keyId,
         teamId: credentials.token.teamId,
-        production: process.env.APN_PRODUCTION === 'true',
       },
+      production: process.env.APN_PRODUCTION === 'true',
     };
 
     this.pushEventEmitter = new PushEventEmitter();
