@@ -1,0 +1,18 @@
+applications:
+- name: pius-gateway-ng
+  command: node server/server_app.js
+  disk_quota: 1G
+  env:
+    APN_PRODUCTION: false
+    BASE_URL: https://pius-gateway-ng.eu-gb.mybluemix.net
+    NODE_ENV: dev
+    START_PUSHER: false
+  instances: 1
+  memory: 128M
+  routes:
+  - route: pius-gateway-ng.eu-gb.mybluemix.net
+  services:
+  - Cloudant
+  - apns
+  - pius-vertretungsplan-service
+  stack: cflinuxfs2

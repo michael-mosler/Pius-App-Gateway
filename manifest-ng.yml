@@ -11,8 +11,8 @@ applications:
   - apns
   - pius-vertretungsplan-service
   env:
-    NODE_ENV: dev
-    BASE_URL: https://pius-gateway-ng.eu-de.mybluemix.net
+    NODE_ENV: production
+    BASE_URL: https://pius-gateway.eu-de.mybluemix.net
     START_PUSHER: true
-    APN_PRODUCTION: false
+    APN_PRODUCTION: true
   stack: cflinuxfs2
