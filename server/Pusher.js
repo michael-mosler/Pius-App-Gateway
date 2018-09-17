@@ -13,6 +13,7 @@ class Pusher {
   constructor() {
     this.deviceTokenManager = new DeviceTokenManager();
     this.apnProvider = null;
+    this.apnConnShutdownTimer = null;
     this.pendingNotifications = 0;
 
     const credentials = Config.upsMap.get('apns');
@@ -35,9 +36,31 @@ class Pusher {
    */
   condApnConnectionShutdown() {
     if (this.pendingNotifications === 0 && this.apnProvider) {
-      console.log(`No pending notification left, shutting down connection to APN`);
       this.apnProvider.shutdown();
       this.apnProvider = null;
+      console.log('No pending notification left, shut down connection to APN');
+    }
+
+    this.apnConnShutdownTimer = null;
+  }
+
+  /**
+   * Schedule APN connection shutdown. After calling this function the shutdown of APN
+   * connection will not happen before at least 30s have passed. An already scheduled
+   * shutdown will be cancelled.
+   * @private
+   */
+  scheduleApnConnectionShutdown() {
+    if (this.pendingNotifications === 0 && this.apnProvider) {
+      console.log('Schedule shutdown of APN connection.');
+
+      // If there is a timer already, cancel it first.
+      if (this.apnConnShutdownTimer) {
+        console.log('Will cancel existing timer before scheduling shutdown...');
+        clearTimeout(this.apnConnShutdownTimer);
+      }
+      // Schedule connection shutdown with a delay of 10s.
+      this.apnConnShutdownTimer = setTimeout(() => this.condApnConnectionShutdown(), 10000);
     }
   }
 
@@ -76,6 +99,7 @@ class Pusher {
             device.docs.forEach(device => revMap.set(device._id, device._rev));
 
             const deltaList = VertretungsplanHelper.delta(changeListItem);
+            console.log(`...${util.inspect(deviceTokens, { depth: 1 })}`);
             console.log(deltaList);
             this.sendPushNotification(deviceTokens, revMap, deltaList, changeListItem.grade);
           }
@@ -104,8 +128,8 @@ class Pusher {
       try {
         // Connect to APN service if not done so already.
         if (!this.apnProvider) {
-          console.log('Getting APN connection');
           this.apnProvider = new apn.Provider(this.options);
+          console.log('Got APN connection');
         }
 
         console.log(`# of pending notifications is ${this.pendingNotifications}`);
@@ -130,11 +154,11 @@ class Pusher {
           await this.deviceTokenManager.housekeeping(failedList);
 
           this.pendingNotifications -= 1;
-          this.condApnConnectionShutdown();
+          this.scheduleApnConnectionShutdown();
         } catch (err) {
           console.log(`Sending APN failed with exception promise: ${err}`);
           this.pendingNotifications -= 1;
-          this.condApnConnectionShutdown();
+          this.scheduleApnConnectionShutdown();
         };
       } catch (err) {
         console.log(`Problem when sending push notficication for grade ${grade}: ${err}`);

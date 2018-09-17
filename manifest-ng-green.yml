@@ -1,10 +1,10 @@
 applications:
-- name: Pius-Gateway
+- name: pius-gateway-ng-green
   instances: 1
   memory: 128M
   disk_quota: 1024M
   routes:
-  - route: pius-gateway.eu-de.mybluemix.net
+  - route: pius-gateway-ng-green.eu-de.mybluemix.net
   command: node server/server_app.js
   services:
   - Cloudant
