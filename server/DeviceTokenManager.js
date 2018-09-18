@@ -1,11 +1,9 @@
 const CloudantDb = require('./CloudantDb');
+const Config = require('./Config');
 
 class DeviceTokemManager {
   constructor() {
     this.deviceTokensDb = new CloudantDb('device-tokens', true);
-
-    // Will be put into key store.
-    this.apiKey = 'heSXxSOvNcl8J4UB9$#TV9TUZ3zClbX$EyOQzKiqGWxRgonzSe';
   }
 
   /**
@@ -14,7 +12,7 @@ class DeviceTokemManager {
    * @param {ServerResponse} res
    */
   registerDeviceToken(req, res) {
-    if (req.body.apiKey !== this.apiKey) {
+    if (req.body.apiKey !== Config.apiKey) {
       res.status(401).end();
       return;
     }

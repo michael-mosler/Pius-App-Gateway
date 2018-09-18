@@ -38,6 +38,10 @@ class Config {
     }
     return upsMap;
   }
+
+  static get apiKey() {
+    return 'heSXxSOvNcl8J4UB9$#TV9TUZ3zClbX$EyOQzKiqGWxRgonzSe';
+  }
 }
 
 module.exports = Config;

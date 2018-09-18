@@ -15,4 +15,5 @@ applications:
     BASE_URL: https://pius-gateway.eu-de.mybluemix.net
     START_PUSHER: true
     APN_PRODUCTION: true
+    COMPRESSION: false
   stack: cflinuxfs2

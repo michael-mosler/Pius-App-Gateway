@@ -1,4 +1,5 @@
 const Helmet = require('helmet');
+const Compression = require('compression');
 const BodyParser = require('body-parser');
 const CookieParser = require('cookie-parser');
 const Express = require('express');
@@ -24,6 +25,7 @@ const DeviceTokenManager = require('./DeviceTokenManager');
 class App {
   constructor() {
     this.config = new Config();
+    this.pusherJob = null;
 
     this.initApp();
     this.expressApp = App.initMiddleware();
@@ -45,15 +47,23 @@ class App {
       process.exit(-1);
     });
 
+    // Initialise pusher.
     this.pusher = new Pusher();
 
     if (process.env.START_PUSHER === 'true') {
-      console.log('Creating pusher job...');
-      const cronjob = new Cron.CronJob('0 0,5,10,15,20,25,30,35,40,45,50,55 * * * *', () => { // eslint-disable-line no-unused-vars
-        const vertretungsplanHandler = new VertretungsplanHandler();
-        vertretungsplanHandler.checker();
-      }, true, 'Europe/Berlin');
+      this.createPusherJob();
     }
+  }
+
+  /**
+   * Create the pusher job.
+   */
+  createPusherJob() {
+    console.log('Creating pusher job...');
+    this.pusherJob = new Cron.CronJob('0 0,5,10,15,20,25,30,35,40,45,50,55 * * * *', () => { // eslint-disable-line no-unused-vars
+      const vertretungsplanHandler = new VertretungsplanHandler();
+      vertretungsplanHandler.checker();
+    }, true, 'Europe/Berlin');
   }
 
   /**
@@ -64,6 +74,11 @@ class App {
    */
   static initMiddleware() {
     const expressApp = Express();
+
+    if (process.env.COMPRESSION === 'true') {
+      console.log('Enabling compression');
+      expressApp.use(Compression());
+    }
     expressApp.use(Helmet());
 
     // parse application/x-www-form-urlencoded
@@ -124,6 +139,15 @@ class App {
           : proxyResData;
       },
     }));
+
+    router.post('/startPusher', (req, res) => {
+      if (req.body.apiKey !== Config.apiKey) {
+        res.status(401).end();
+      } else {
+        this.createPusherJob();
+        res.status(200).end();
+      }
+    });
 
     // DEBUG routes are available in dev only.
     if (process.env.NODE_ENV === 'dev') {

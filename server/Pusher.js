@@ -141,7 +141,7 @@ class Pusher {
         notification.topic = 'de.rmkrings.piusapp';
         notification.sound = 'default';
         // notification.title = 'Dein Vertretungsplan hat sich geändert!';
-        notification.body = `Es gibt ${deltaList.length} Änderung${(deltaList.count > 1) ? 'en' : ''} an Deinem Vertretungsplan.`;
+        notification.body = `Es gibt ${deltaList.length} Änderung${(deltaList.length > 1) ? 'en' : ''} an Deinem Vertretungsplan.`;
         notification.payload = { deltaList };
 
         try {
