@@ -100,7 +100,7 @@ class Pusher {
 
             const deltaList = VertretungsplanHelper.delta(changeListItem);
             console.log(`...${util.inspect(deviceTokens, { depth: 1 })}`);
-            console.log(deltaList);
+            console.log(util.inspect(deltaList, { depth: 4 }));
             this.sendPushNotification(deviceTokens, revMap, deltaList, changeListItem.grade);
           }
         }

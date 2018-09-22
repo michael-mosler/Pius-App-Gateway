@@ -99,7 +99,7 @@ class NewsReqHandler {
     $('script').each(function () {
       let uri = $(this).attr('src');
       if (uri) {
-        uri = uri.replace(/^http:\/\/pius-gymnasium.de\/?/, config.baseUrl);
+        uri = uri.replace(/^https?:\/\/pius-gymnasium.de\/?/, config.baseUrl);
         $(this).attr('src', uri);
       }
     });
@@ -107,7 +107,7 @@ class NewsReqHandler {
     $('img').each(function () {
       let uri = $(this).attr('src');
       if (uri) {
-        uri = uri.replace(/^http:\/\/pius-gymnasium.de\/?/, config.baseUrl);
+        uri = uri.replace(/^https?:\/\/pius-gymnasium.de\/?/, config.baseUrl);
         $(this).attr('src', uri);
       }
     });
@@ -115,7 +115,7 @@ class NewsReqHandler {
     $('link').each(function () {
       let uri = $(this).attr('href');
       if (uri) {
-        uri = uri.replace(/^http:\/\/pius-gymnasium.de\/?/, config.baseUrl);
+        uri = uri.replace(/^https?:\/\/pius-gymnasium.de\/?/, config.baseUrl);
         $(this).attr('href', uri);
       }
     });

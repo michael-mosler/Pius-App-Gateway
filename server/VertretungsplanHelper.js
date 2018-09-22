@@ -7,6 +7,7 @@ const Config = require('./Config');
  * @property {String} type - Item type; ADDED, DELETED, CHANGED
  * @property {Array<String>} detailsNew - New detail items (for ADDED or CHANGED)
  * @property {Array<String>} detailsOld - Old detail items (for DELETED OR CHANGED)
+ * @property {Number} ord - Ordinary number of item; items can be sorted by this number is timely order
  */
 class DeltaItem {
   constructor({ date, type, detailsNew = null, detailsOld = null }) {
@@ -14,6 +15,17 @@ class DeltaItem {
     this.type = type;
     this.detailsNew = detailsNew;
     this.detailsOld = detailsOld;
+  }
+
+  get ord() {
+    const l = this.date.length;
+
+    // Prefer lesson info from new details. Extract lesson and normalize to two digits.
+    const details = this.detailsNew || this.detailsOld;
+    const lesson = (details[0].match(/\d+/) || ['99'])[0].padStart(2, '0');
+
+    // Ordinary number from YYYYMMDDLL (LL = lesson)
+    return parseInt(`${this.date.substring(l - 4)}${this.date.substring(l - 7, l - 5)}${this.date.substring(l - 10, l - 8)}${lesson}`);
   }
 }
 
@@ -218,7 +230,7 @@ class VertretungsplanHelper {
         });
       }
 
-      return deltaList;
+      return deltaList.sort((item1, item2) => item1.ord - item2.ord);
     } catch (err) {
       console.log(`ERROR: delta() failed with ${err}.\nInput: ${util.inspect(changeListItem, { depth: 6 })}\ncourse list: ${util.inspect(courseList, { depth: 6 })}`);
       throw err;
