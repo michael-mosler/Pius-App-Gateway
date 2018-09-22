@@ -130,11 +130,11 @@ class App {
         return require('url').parse(req.originalUrl).path;
       },
       userResDecorator: function (proxyRes, proxyResData, userReq) {
-        if (userReq.baseUrl.match(/wordpress\/wp-admin\/admin-ajax.php/)) {
+        if (userReq.originalUrl.match(/wordpress\/wp-admin\/admin-ajax.php/)) {
           return NewsReqHandler.pager(proxyResData);
         }
 
-        return (userReq.baseUrl.match(/.html?$/))
+        return (userReq.originalUrl.match(/.html?$/))
           ? NewsReqHandler.removeStandardHeader(proxyResData)
           : proxyResData;
       },
