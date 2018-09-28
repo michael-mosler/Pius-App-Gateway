@@ -49,9 +49,10 @@ class App {
 
     // Initialise pusher.
     this.pusher = new Pusher();
+    this.createPusherJob();
 
     if (process.env.START_PUSHER === 'true') {
-      this.createPusherJob();
+      this.pusherJob.start();
     }
   }
 
@@ -63,7 +64,7 @@ class App {
     this.pusherJob = new Cron.CronJob('0 0,5,10,15,20,25,30,35,40,45,50,55 * * * *', () => { // eslint-disable-line no-unused-vars
       const vertretungsplanHandler = new VertretungsplanHandler();
       vertretungsplanHandler.checker();
-    }, true, 'Europe/Berlin');
+    }, false, 'Europe/Berlin');
   }
 
   /**
@@ -143,9 +144,24 @@ class App {
     router.post('/startPusher', (req, res) => {
       if (req.body.apiKey !== Config.apiKey) {
         res.status(401).end();
-      } else {
-        this.createPusherJob();
+      } else if (this.pusherJob) {
+        this.pusherJob.start();
+        console.log('Starting pusher...');
         res.status(200).end();
+      } else {
+        res.status(404).end();
+      }
+    });
+
+    router.delete('/startPusher', (req, res) => {
+      if (req.body.apiKey !== Config.apiKey) {
+        res.status(401).end();
+      } else if (this.pusherJob) {
+        console.log('Stopping pusher...');
+        this.pusherJob.stop();
+        res.status(200).end();
+      } else {
+        res.status(404).end();
       }
     });
 

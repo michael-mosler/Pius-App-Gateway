@@ -126,6 +126,12 @@ class VertretungsplanHelper {
       return detailItems1[0] === detailItems2[0] && detailItems1[2] === detailItems2[2] && detailItems1[3] === detailItems2[3] && detailItems1[4] === detailItems2[4];
     }
 
+    // Klausur: This may clash with a substitution for the same lesson. Thus, old and new are equal iff both are a Klausur in
+    // same lesson and course.
+    if (detailItems1[1].trim() === 'Klausur' || detailItems2[1].trim() === 'Klausur') {
+      return detailItems1[0] === detailItems2[0] && detailItems1[1] === detailItems2[1] && detailItems1[2] === detailItems2[2];
+    }
+
     return detailItems1[0] === detailItems2[0] && detailItems1[2] === detailItems2[2];
   }
 
@@ -232,7 +238,7 @@ class VertretungsplanHelper {
 
       return deltaList.sort((item1, item2) => item1.ord - item2.ord);
     } catch (err) {
-      console.log(`ERROR: delta() failed with ${err}.\nInput: ${util.inspect(changeListItem, { depth: 6 })}\ncourse list: ${util.inspect(courseList, { depth: 6 })}`);
+      console.log(`ERROR: delta() failed with ${err}.\nInput: ${util.inspect(changeListItem, { depth: 8 })}\ncourse list: ${util.inspect(courseList, { depth: 8 })}`);
       throw err;
     }
   }
