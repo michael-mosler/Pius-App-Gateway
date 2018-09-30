@@ -185,14 +185,34 @@ class VertretungsplanHandler {
     } else if ((parent && parent.tag === 'th') && json.node === 'text' && json.text.match(/^((\d[A-E])|(Q[12])|(EF)|(IK)|(VT)|(HW))/)) {
       this.vertretungsplan.currentDateItem.gradeItems.push(new GradeItem(json.text));
     } else if (json.attr && json.attr.class instanceof Array && json.attr.class[0] === 'vertretung' && json.attr.class[1] === 'neu') {
-      const text = VertretungsplanHandler.mergeSubTextItems(json);
+      let text = VertretungsplanHandler.mergeSubTextItems(json);
+      const indexOfCurrentDetailItem = this.vertretungsplan.currentDateItem.currentGradeItem.currentVertretungsplanItem.detailItems.length;
+
+      // Sondereinsatz with incomplete course specification. In this case in our terms this is inconsistent. We fix it
+      // by removing the course.
+      if (indexOfCurrentDetailItem === 2) {
+        if (text.length < 3 && this.vertretungsplan.currentDateItem.currentGradeItem.currentVertretungsplanItem.detailItems[1].trim() === 'Sondereinsatz') {
+          text = '';
+        }
+      }
+
       this.vertretungsplan.currentDateItem.currentGradeItem.currentVertretungsplanItem.detailItems.push(text.replace(/\s\s+/, ' '));
       isInItemList = true;
     } else if (json.attr && json.attr.class instanceof Array && json.attr.class[0] === 'eva') {
       const text = VertretungsplanHandler.mergeSubTextItems(json);
       this.vertretungsplan.currentDateItem.currentGradeItem.currentVertretungsplanItem.detailItems.push(text.replace(/\s\s+/, ' '));
     } else if (json.attr && json.attr.class === 'vertretung') {
-      const text = VertretungsplanHandler.mergeSubTextItems(json);
+      let text = VertretungsplanHandler.mergeSubTextItems(json);
+      const indexOfCurrentDetailItem = this.vertretungsplan.currentDateItem.currentGradeItem.currentVertretungsplanItem.detailItems.length;
+
+      // Sondereinsatz with incomplete course specification. In this case in our terms this is inconsistent. We fix it
+      // by removing the course.
+      if (indexOfCurrentDetailItem === 2) {
+        if (text.trim().length < 3 && this.vertretungsplan.currentDateItem.currentGradeItem.currentVertretungsplanItem.detailItems[1].trim() === 'Sondereinsatz') {
+          text = '';
+        }
+      }
+
       this.vertretungsplan.currentDateItem.currentGradeItem.currentVertretungsplanItem.detailItems.push(text.replace(/\s\s+/, ' '));
       isInItemList = true;
     } else if (json.node === 'text' && this.vertretungsplan.tickerText && this.vertretungsplan.dateItems.length === 0) {
@@ -242,7 +262,7 @@ class VertretungsplanHandler {
 
         // When not modified do not send any data but report "not modified".
         // noinspection JSUnresolvedVariable
-        if (digest === req.query.digest) {
+        if (process.env.DIGEST_CHECK === 'true' && digest === req.query.digest) {
           res.status(304).end();
         } else {
           const json = Html2Json(strData);
