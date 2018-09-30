@@ -126,6 +126,12 @@ class VertretungsplanHelper {
       return detailItems1[0] === detailItems2[0] && detailItems1[2] === detailItems2[2] && detailItems1[3] === detailItems2[3] && detailItems1[4] === detailItems2[4];
     }
 
+    // Mitbetreuung: This is even more tricky than Sondereinsatz. Two items refer to the same lesson only if properties 0 to 5 are equal.
+    // This is especially important when "Foerderkurse" which are actually splitted are joined.
+    if (detailItems1[1].trim() === 'Mitbetreuung' && detailItems2[1].trim() === 'Mitbetreuung') {
+      return detailItems1[0] === detailItems2[0] && detailItems1[2] === detailItems2[2] && detailItems1[3] === detailItems2[3] && detailItems1[4] === detailItems2[4] && detailItems1[5] === detailItems2[5];
+    }
+
     // Klausur: This may clash with a substitution for the same lesson. Thus, old and new are equal iff both are a Klausur in
     // same lesson and course.
     if (detailItems1[1].trim() === 'Klausur' || detailItems2[1].trim() === 'Klausur') {
