@@ -179,7 +179,7 @@ class VertretungsplanHandler {
         this.vertretungsplan.dateItems.push(new DateItem(json.text));
       }
     } else if (json.node === 'text' && json.text.match(/Letzte Aktualisierung:/) && !this.vertretungsplan.lastUpdate) {
-      this.vertretungsplan.lastUpdate = json.text.replace(/[()]/g, '');
+      this.vertretungsplan.lastUpdate = json.text.replace(/[()]/g, '').replace(/\s*Letzte Aktualisierung:\s*/, '');
     } else if (json.node === 'text' && json.text.match(/^Heute ist/)) {
       this.vertretungsplan.tickerText = json.text;
     } else if ((parent && parent.tag === 'th') && json.node === 'text' && json.text.match(/^((\d[A-E])|(Q[12])|(EF)|(IK)|(VT)|(HW))/)) {
