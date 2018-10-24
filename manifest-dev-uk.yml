@@ -8,6 +8,7 @@ applications:
     NODE_ENV: dev
     START_PUSHER: false
     COMPRESSION: true
+    DIGEST_CHECK: false
   instances: 1
   memory: 128M
   routes:
