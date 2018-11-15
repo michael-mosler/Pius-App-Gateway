@@ -64,7 +64,7 @@ class App {
     this.pusherJob = new Cron.CronJob('0 0,5,10,15,20,25,30,35,40,45,50,55 * * * *', () => { // eslint-disable-line no-unused-vars
       const vertretungsplanHandler = new VertretungsplanHandler();
       vertretungsplanHandler.checker();
-    }, false, 'Europe/Berlin');
+    }, null, false, 'Europe/Berlin');
   }
 
   /**
@@ -109,6 +109,11 @@ class App {
 
     router.get('/vertretungsplan', (req, res) => {
       const vertretungsplanHandler = new VertretungsplanHandler();
+      vertretungsplanHandler.process(req, res);
+    });
+
+    router.get('/v2/vertretungsplan', (req, res) => {
+      const vertretungsplanHandler = new VertretungsplanHandler('v2');
       vertretungsplanHandler.process(req, res);
     });
 
