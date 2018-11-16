@@ -16,5 +16,5 @@ applications:
     START_PUSHER: false
     APN_PRODUCTION: true
     COMPRESSION: true
-    DIGEST_CHECK: false
+    DIGEST_CHECK: true
   stack: cflinuxfs2
