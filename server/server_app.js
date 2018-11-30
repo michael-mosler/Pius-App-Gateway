@@ -8,6 +8,7 @@ const Cron = require('cron');
 
 const Config = require('./Config');
 const NewsReqHandler = require('./NewsReqHandler');
+const NewsReqHandlerV2 = require('./v2-services/NewsReqHandler');
 const VertretungsplanHandler = require('./VertretungsplanHandler');
 const CalendarHandler = require('./CalendarHandler');
 const Pusher = require('./Pusher');
@@ -106,6 +107,10 @@ class App {
         return NewsReqHandler.getNewsFromHomePage(proxyResData);
       },
     }));
+
+    router.get(/^\/v2\/news$/, (req, res) => {
+      NewsReqHandlerV2.getNewsFromHomePage(req, res);
+    });
 
     router.get('/vertretungsplan', (req, res) => {
       const vertretungsplanHandler = new VertretungsplanHandler();
