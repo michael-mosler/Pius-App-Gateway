@@ -18,4 +18,5 @@ applications:
   - Cloudant
   - apns
   - pius-vertretungsplan-service
+  - slack
   stack: cflinuxfs2

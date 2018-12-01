@@ -10,6 +10,7 @@ applications:
   - Cloudant
   - apns
   - pius-vertretungsplan-service
+  - slack
   env:
     NODE_ENV: production
     BASE_URL: https://pius-gateway.eu-de.mybluemix.net
