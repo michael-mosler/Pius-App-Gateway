@@ -12,8 +12,10 @@ const NewsReqHandlerV2 = require('./v2-services/NewsReqHandler');
 const VertretungsplanHandler = require('./VertretungsplanHandler');
 const CalendarHandler = require('./CalendarHandler');
 const Pusher = require('./Pusher');
-
+const SlackBot = require('./SlackBot');
 const DeviceTokenManager = require('./DeviceTokenManager');
+
+const bot = new SlackBot();
 
 /**
  * This class implements our middleware. It create an Express middleware and registers
@@ -29,7 +31,7 @@ class App {
     this.pusherJob = null;
 
     this.initApp();
-    this.expressApp = App.initMiddleware();
+    this.expressApp = this.initMiddleware();
 
     this.deviceTokenManager = new DeviceTokenManager();
     this.router = this.initRouting();
@@ -44,7 +46,13 @@ class App {
     process.on('SIGTERM', () => process.exit(0));
     process.on('SIGINT', () => process.exit(0));
     process.on('uncaughtException', (err) => {
-      console.log(`Unhandled exception exception: ${err}\n`);
+      console.log(`Unhandled exception exception: ${err}`);
+      bot.post(`Pius-Gateway crashed with an unhandled exception: ${err}`);
+      process.exit(-1);
+    });
+    process.on('unhandledRejection', (reason) => {
+      console.log(`Unhandled promise rejection: ${reason}`);
+      bot.post(`Pius-Gateway crashed with an unhandled promise rejection: ${reason}`);
       process.exit(-1);
     });
 
@@ -54,6 +62,7 @@ class App {
 
     if (process.env.START_PUSHER === 'true') {
       this.pusherJob.start();
+      bot.post('Pusher has been started.');
     }
   }
 
@@ -74,11 +83,16 @@ class App {
    * @static
    * @private
    */
-  static initMiddleware() {
+  initMiddleware() {
     const expressApp = Express();
+
+    if (process.env.DIGEST_CHECK === 'true') {
+      bot.post('Digest check is enabled.');
+    }
 
     if (process.env.COMPRESSION === 'true') {
       console.log('Enabling compression');
+      bot.post('Compression is enabled.');
       expressApp.use(Compression());
     }
     expressApp.use(Helmet());
@@ -206,5 +220,9 @@ class App {
   }
 }
 
-const app = new App();
-app.run();
+;(async () => {
+  await bot.post('Pius-Gateway is being (re)started.');
+  const app = new App();
+  app.run();
+  bot.post('*Pius-Gateway is ready.*');
+})();

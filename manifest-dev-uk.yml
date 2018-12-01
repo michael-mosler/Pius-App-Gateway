@@ -9,6 +9,7 @@ applications:
     START_PUSHER: false
     COMPRESSION: true
     DIGEST_CHECK: true
+    SLACK_ENABLED: false
   instances: 1
   memory: 128M
   routes:

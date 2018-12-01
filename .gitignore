@@ -1,6 +1,7 @@
 .idea
 apn-credentials.json
 pius-vertretungsplan-credentials.json
+slack-token.json
 doc
 node_modules
 pius-gateway.env

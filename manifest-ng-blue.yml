@@ -13,8 +13,9 @@ applications:
   env:
     NODE_ENV: production
     BASE_URL: https://pius-gateway.eu-de.mybluemix.net
-    START_PUSHER: false
+    START_PUSHER: true
     APN_PRODUCTION: true
     COMPRESSION: true
     DIGEST_CHECK: true
+    SLACK_ENABLED: true
   stack: cflinuxfs2
