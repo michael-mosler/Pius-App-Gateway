@@ -1,6 +1,6 @@
 {
   "name": "pius-gateway",
-  "version": "2.0",
+  "version": "2.1.0",
   "description": "Pius Website Gateway for Pius App",
   "repository": {
     "type": "git",
@@ -20,7 +20,8 @@
     "clone": "^2.1.2",
     "compression": "^1.7.3",
     "cookie-parser": "^1.4.3",
-    "cron": "^1.4.1",
+    "cron": "^1.5.1",
+    "dateformat": "^3.0.3",
     "express": "^4.16.3",
     "express-http-proxy": "^1.2.0",
     "helmet": "^3.13.0",

@@ -7,6 +7,7 @@ const Proxy = require('express-http-proxy');
 const Cron = require('cron');
 
 const Config = require('./Config');
+const PostingsHandler = require('./v2-services/PostingsHandler');
 const NewsReqHandler = require('./NewsReqHandler');
 const NewsReqHandlerV2 = require('./v2-services/NewsReqHandler');
 const VertretungsplanHandler = require('./VertretungsplanHandler');
@@ -126,13 +127,18 @@ class App {
       NewsReqHandlerV2.getNewsFromHomePage(req, res);
     });
 
-    router.get('/vertretungsplan', (req, res) => {
-      const vertretungsplanHandler = new VertretungsplanHandler();
-      vertretungsplanHandler.process(req, res);
+    router.get('/v2/postings', (req, res) => {
+      const postingsHandler = new PostingsHandler();
+      postingsHandler.process(req, res);
     });
 
     router.get('/v2/vertretungsplan', (req, res) => {
       const vertretungsplanHandler = new VertretungsplanHandler('v2');
+      vertretungsplanHandler.process(req, res);
+    });
+
+    router.get('/vertretungsplan', (req, res) => {
+      const vertretungsplanHandler = new VertretungsplanHandler();
       vertretungsplanHandler.process(req, res);
     });
 
@@ -220,7 +226,7 @@ class App {
   }
 }
 
-;(async () => {
+(async () => {
   await bot.post('Pius-Gateway is being (re)started.');
   const app = new App();
   app.run();

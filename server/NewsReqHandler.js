@@ -20,7 +20,7 @@ class NewsReqHandler {
 
     // Remove News h2-header element.
     $('.entry > h2:nth-child(1)').remove();
-    this.rewriteRefs($, config);
+    NewsReqHandler.rewriteRefs($, config);
 
     $('#entry-right').attr('id', null);
     return $.html();
@@ -36,7 +36,7 @@ class NewsReqHandler {
     const config = new Config();
     const $ = Cheerio.load(data);
 
-    this.rewriteRefs($, config);
+    NewsReqHandler.rewriteRefs($, config);
     return $.html();
   }
 
@@ -94,7 +94,9 @@ class NewsReqHandler {
     $('.left').remove();
     $('.right').remove();
     $('body > header:nth-child(2)').remove();
+    /*
     $('#box').remove();
+    */
 
     $('script').each(function () {
       let uri = $(this).attr('src');
