@@ -1,11 +1,16 @@
 const NodeRestClient = require('node-rest-client').Client;
 const Cheerio = require('cheerio');
+const UrlParse = require('url-parse');
 const md5 = require('md5');
 const Config = require('../Config');
 
 class NewsItem {
   constructor(img, href, heading, text) {
-    this.img = img;
+    const parsedUrl = UrlParse(img);
+    parsedUrl.query = parsedUrl.query.replace(/w=\d+/, 'w=64');
+    parsedUrl.query = parsedUrl.query.replace(/h=\d+/, 'h=64');
+
+    this.img = parsedUrl.toString();
     this.href = href;
     this.heading = heading;
     this.text = text;

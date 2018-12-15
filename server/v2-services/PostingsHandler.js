@@ -23,7 +23,7 @@ class PostingsHandler {
       if (process.env.DIGEST_CHECK === 'true' && digest === req.query.digest) {
         res.status(304).end();
       } else {
-        res.status(200).send({ messages, digest });
+        res.status(200).send({ messages, _digest: digest });
       }
     } catch (err) {
       console.log(`Reading current postings failed: ${err}`);
