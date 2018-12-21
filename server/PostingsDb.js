@@ -25,7 +25,7 @@ class PostingsDb extends CloudantDb {
 
     return postings.docs
       .filter(doc => !doc.hidden || true)
-      .sort((a, b) => (new Date(a.validFrom) - new Date(b.validFrom)))
+      .sort((a, b) => (new Date(b.timestamp) - new Date(a.timestamp)))
       .map(doc => ({ timestamp: doc.timestamp, message: doc.message }));
   }
 }
