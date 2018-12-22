@@ -19,12 +19,7 @@ class PostingsHandler {
     try {
       const messages = await this.postingsDb.getPostings({ forDate: new Date() });
       const digest = md5(JSON.stringify(messages));
-
-      if (process.env.DIGEST_CHECK === 'true' && digest === req.query.digest) {
-        res.status(304).end();
-      } else {
-        res.status(200).send({ messages, _digest: digest });
-      }
+      res.status(200).send({ messages, _digest: digest });
     } catch (err) {
       console.log(`Reading current postings failed: ${err}`);
       res.status(503).end();
