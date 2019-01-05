@@ -96,7 +96,8 @@ class App {
       bot.post('Compression is enabled.');
       expressApp.use(Compression());
     }
-    expressApp.use(Helmet());
+
+    expressApp.use(Helmet({ noCache: true }));
 
     // parse application/x-www-form-urlencoded
     expressApp.use(BodyParser.urlencoded({ extended: true }));
