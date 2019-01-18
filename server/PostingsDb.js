@@ -1,5 +1,6 @@
 const DateFormat = require('dateformat');
 const CloudantDb = require('./CloudantDb');
+const HtmlHelper = require('./helper/HtmlHelper');
 
 /**
  * Implemnents access to our postings db.
@@ -24,9 +25,9 @@ class PostingsDb extends CloudantDb {
     });
 
     return postings.docs
-      .filter(doc => !doc.hidden || true)
+      .filter(doc => doc.hidden === null || !doc.hidden)
       .sort((a, b) => (new Date(b.timestamp) - new Date(a.timestamp)))
-      .map(doc => ({ timestamp: doc.timestamp, message: doc.message }));
+      .map(doc => ({ timestamp: doc.timestamp, message: HtmlHelper.fontify(doc.message) }));
   }
 }
 

@@ -1,5 +1,8 @@
 const md5 = require('md5');
+const DateFormat = require('dateformat');
 const PostingsDb = require('../PostingsDb');
+const SubstitutionScheduleHashesDb = require('../SubstitutionScheduleHashesDb');
+const HtmlHelper = require('../helper/HtmlHelper');
 
 /**
  * Processes requests on the posting we have published to the users.
@@ -7,6 +10,7 @@ const PostingsDb = require('../PostingsDb');
 class PostingsHandler {
   constructor() {
     this.postingsDb = new PostingsDb();
+    this.substitutionScheduleHashesDb = new SubstitutionScheduleHashesDb();
   }
 
   /**
@@ -18,6 +22,16 @@ class PostingsHandler {
   async process(req, res) {
     try {
       const messages = await this.postingsDb.getPostings({ forDate: new Date() });
+      const substitutionSchedule5A = await this.substitutionScheduleHashesDb.get('5A');
+      const { substitutionSchedule: { _additionalText: additionalText } = { _additionalText: '' } } = substitutionSchedule5A;
+
+      if (additionalText.length > 0) {
+        const timestamp = DateFormat(new Date(substitutionSchedule5A.timestamp), 'isoUtcDateTime');
+
+        const additionalMessage = { timestamp, message: HtmlHelper.fontify(additionalText) };
+        messages.unshift(additionalMessage);
+      }
+
       const digest = md5(JSON.stringify(messages));
 
       if (process.env.DIGEST_CHECK === 'true' && digest === req.query.digest) {
@@ -26,7 +40,7 @@ class PostingsHandler {
         res.status(200).send({ messages, _digest: digest });
       }
     } catch (err) {
-      console.log(`Reading current postings failed: ${err}`);
+      console.log(`Building postings failed: ${err}`);
       res.status(503).end();
     }
   }
