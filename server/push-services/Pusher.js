@@ -1,9 +1,9 @@
 const util = require('util');
 const apn = require('apn');
-const Config = require('./Config');
+const Config = require('../core-services/Config');
 const PushEventEmitter = require('./PushEventEmitter');
-const DeviceTokenManager = require('./DeviceTokenManager');
-const VertretungsplanHelper = require('./VertretungsplanHelper');
+const DeviceTokenManager = require('../core-services/DeviceTokenManager');
+const VertretungsplanHelper = require('../helper/VertretungsplanHelper');
 
 /**
  * This class on instantiation registers on 'push' event. When such an event is received

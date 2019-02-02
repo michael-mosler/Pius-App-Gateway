@@ -1,6 +1,6 @@
 const util = require('util');
 const clone = require('clone');
-const Config = require('./Config');
+const Config = require('../core-services/Config');
 
 /**
  * Delta list payload definition.

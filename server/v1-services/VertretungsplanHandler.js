@@ -4,11 +4,11 @@ const Html2Json = require('html2json').html2json;
 const request = require('request');
 const md5 = require('md5');
 const clone = require('clone');
-const PushEventEmitter = require('./PushEventEmitter');
+const PushEventEmitter = require('../push-services/PushEventEmitter');
 
-const Config = require('./Config');
-const BasicAuthProvider = require('./BasicAuthProvider');
-const SubstitionScheduleHashessDb = require('./SubstitutionScheduleHashesDb');
+const Config = require('../core-services/Config');
+const BasicAuthProvider = require('../providers/BasicAuthProvider');
+const SubstitionScheduleHashessDb = require('../providers/SubstitutionScheduleHashesDb');
 
 const vertretungsplanURL = 'http://pius-gymnasium.de/vertretungsplan/';
 

@@ -1,4 +1,4 @@
-const Config = require('./Config');
+const Config = require('../core-services/Config');
 
 class BasicAuthProvider {
   constructor() {

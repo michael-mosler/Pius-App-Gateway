@@ -1,7 +1,7 @@
 const md5 = require('md5');
 const DateFormat = require('dateformat');
-const PostingsDb = require('../PostingsDb');
-const SubstitutionScheduleHashesDb = require('../SubstitutionScheduleHashesDb');
+const PostingsDb = require('../providers/PostingsDb');
+const SubstitutionScheduleHashesDb = require('../providers/SubstitutionScheduleHashesDb');
 const HtmlHelper = require('../helper/HtmlHelper');
 
 /**

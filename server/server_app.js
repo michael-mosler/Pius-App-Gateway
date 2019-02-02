@@ -6,15 +6,15 @@ const Express = require('express');
 const Proxy = require('express-http-proxy');
 const Cron = require('cron');
 
-const Config = require('./Config');
+const Config = require('./core-services/Config');
 const PostingsHandler = require('./v2-services/PostingsHandler');
-const NewsReqHandler = require('./NewsReqHandler');
+const NewsReqHandler = require('./v1-services/NewsReqHandler');
 const NewsReqHandlerV2 = require('./v2-services/NewsReqHandler');
-const VertretungsplanHandler = require('./VertretungsplanHandler');
-const CalendarHandler = require('./CalendarHandler');
-const Pusher = require('./Pusher');
-const SlackBot = require('./SlackBot');
-const DeviceTokenManager = require('./DeviceTokenManager');
+const VertretungsplanHandler = require('./v1-services/VertretungsplanHandler');
+const CalendarHandler = require('./v1-services/CalendarHandler');
+const Pusher = require('./push-services/Pusher');
+const SlackBot = require('./core-services/SlackBot');
+const DeviceTokenManager = require('./core-services/DeviceTokenManager');
 
 const bot = new SlackBot();
 

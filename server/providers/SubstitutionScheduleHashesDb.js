@@ -1,4 +1,4 @@
-const CloudantDb = require('./CloudantDb');
+const CloudantDb = require('../core-services/CloudantDb');
 
 class SubstitutionScheduleHashesDb extends CloudantDb {
   constructor() {

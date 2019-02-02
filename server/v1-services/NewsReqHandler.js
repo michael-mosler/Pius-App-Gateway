@@ -1,5 +1,5 @@
 const Cheerio = require('cheerio');
-const Config = require('./Config');
+const Config = require('../core-services/Config');
 
 class NewsReqHandler {
   /**

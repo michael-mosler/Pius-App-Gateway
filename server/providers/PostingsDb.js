@@ -1,6 +1,6 @@
 const DateFormat = require('dateformat');
-const CloudantDb = require('./CloudantDb');
-const HtmlHelper = require('./helper/HtmlHelper');
+const CloudantDb = require('../core-services/CloudantDb');
+const HtmlHelper = require('../helper/HtmlHelper');
 
 /**
  * Implemnents access to our postings db.

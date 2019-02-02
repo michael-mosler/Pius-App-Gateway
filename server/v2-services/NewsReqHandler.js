@@ -2,7 +2,7 @@ const NodeRestClient = require('node-rest-client').Client;
 const Cheerio = require('cheerio');
 const UrlParse = require('url-parse');
 const md5 = require('md5');
-const Config = require('../Config');
+const Config = require('../core-services/Config');
 
 class NewsItem {
   constructor(img, href, heading, text) {
