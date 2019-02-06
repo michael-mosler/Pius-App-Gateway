@@ -12,7 +12,7 @@ const NewsReqHandler = require('./v1-services/NewsReqHandler');
 const NewsReqHandlerV2 = require('./v2-services/NewsReqHandler');
 const VertretungsplanHandler = require('./v1-services/VertretungsplanHandler');
 const CalendarHandler = require('./v1-services/CalendarHandler');
-const Pusher = require('./push-services/Pusher');
+const Pusher = require('./functional-services/Pusher');
 const SlackBot = require('./core-services/SlackBot');
 const DeviceTokenManager = require('./core-services/DeviceTokenManager');
 

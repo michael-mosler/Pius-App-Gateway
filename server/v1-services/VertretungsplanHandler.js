@@ -4,8 +4,8 @@ const Html2Json = require('html2json').html2json;
 const request = require('request');
 const md5 = require('md5');
 const clone = require('clone');
-const PushEventEmitter = require('../push-services/PushEventEmitter');
 
+const PushEventEmitter = require('../functional-services/PushEventEmitter');
 const Config = require('../core-services/Config');
 const BasicAuthProvider = require('../providers/BasicAuthProvider');
 const SubstitionScheduleHashessDb = require('../providers/SubstitutionScheduleHashesDb');
@@ -20,6 +20,21 @@ class VertretungsplanItem {
   constructor() {
     this.detailItems = [];
     // this.vertretungsplan = new Vertretungsplan();
+  }
+
+  /**
+   * @returns {String|undefined}
+   */
+  get course() {
+    return this.detailItems[3];
+  }
+
+  /**
+   * Returns EVA text or undefined when there is no EVA text.
+   * @returns {String|undefined}
+   */
+  get evaText() {
+    return this.detailItems[7];
   }
 }
 
@@ -82,14 +97,23 @@ class Vertretungsplan {
     this._digest = null;
   }
 
+  /**
+   * @returns {String}
+   */
   get digest() {
     return this._digest;
   }
 
+  /**
+   * @param {String} value
+   */
   set digest(value) {
     this._digest = value;
   }
 
+  /**
+   * @param {String} value
+   */
   set additionalText(value) {
     this._additionalText = `${this._additionalText} ${value}`.trim();
   }

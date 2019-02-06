@@ -1,4 +1,5 @@
-const DateFormat = require('dateformat');
+const datetime = require('date-and-time');
+const Config = require('../core-services/Config');
 const CloudantDb = require('../core-services/CloudantDb');
 const HtmlHelper = require('../helper/HtmlHelper');
 
@@ -16,7 +17,7 @@ class PostingsDb extends CloudantDb {
    * @returns {Promise<[Object]|Error>} Resolves to a list of documents with timestamp and message property.
    */
   async getPostings({ forDate }) {
-    const filterDate = DateFormat(forDate, 'isoDateTime');
+    const filterDate = datetime.format(forDate, Config.isoDateTime);
     const postings = await this.find({
       'selector': {
         '_id': { '$gt': filterDate },
