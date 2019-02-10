@@ -1,0 +1,187 @@
+{
+  "grade": "Q2",
+  "substitutionSchedule": {
+    "tickerText": "Heute ist Donnerstag, der 07.02.2019  (KW 06 / B-Woche). &rarr; Hofdienst 6c (SZ) + Tutorium HE",
+    "_additionalText": "Am Tag der Zeugnisausgabe (Freitag, 8.2.2019) entfällt die erste große Pause. Die dritte Stunde beginnt um 9:30 Uhr und dauert bis 10:15 Uhr. Danach schließt der Unterricht. EF, Q1: Der Schulchor - heute 14.15 Uhr - fällt aus!",
+    "lastUpdate": "Letzte Aktualisierung: 07.02.2019 17:07 Uhr",
+    "dateItems": [
+      {
+        "title": "Donnerstag, 07.02.2019",
+        "gradeItems": [
+          {
+            "grade": "Q2",
+            "vertretungsplanItems": [
+              {
+                "detailItems": [
+                  " 10 - 11",
+                  " Raum-Vtr.",
+                  " SP G4",
+                  " TU &rarr; SW",
+                  " SE",
+                  " SE",
+                  " Schwimmsachen mitbringen!"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "title": "Freitag, 08.02.2019",
+        "gradeItems": [
+          {
+            "grade": "Q2",
+            "vertretungsplanItems": [
+              {
+                "detailItems": [
+                  " 3",
+                  " Vertretung",
+                  " D L1",
+                  " 314",
+                  " BOD",
+                  " ---",
+                  " Unterricht findet statt!",
+                  " EVA Text Freitag 08.02.2019, D L1"
+                ]
+              },
+              {
+                "detailItems": [
+                  " 3",
+                  " Vertretung",
+                  " EK L1",
+                  " 209",
+                  " HE",
+                  " ---",
+                  " Unterricht findet statt!"
+                ]
+              },
+              {
+                "detailItems": [
+                  " 3",
+                  " Sondereinsatz",
+                  " GE L1",
+                  " 312",
+                  " HÖ",
+                  " ---",
+                  " Unterricht findet statt!"
+                ]
+              },
+              {
+                "detailItems": [
+                  " 3",
+                  " Vertretung",
+                  " E L1",
+                  " 313",
+                  " MK",
+                  " ---",
+                  " Unterricht findet statt!"
+                ]
+              },
+              {
+                "detailItems": [
+                  " 3",
+                  " Sondereinsatz",
+                  " M L1",
+                  " 301",
+                  " MT",
+                  " ---",
+                  " Unterricht findet statt!"
+                ]
+              },
+              {
+                "detailItems": [
+                  " 3",
+                  " Vertretung",
+                  " BI L1",
+                  " BÜ",
+                  " RA",
+                  " ---",
+                  " Unterricht findet statt!"
+                ]
+              },
+              {
+                "detailItems": [
+                  " 3",
+                  " Entfall",
+                  " CH G1",
+                  " XXX",
+                  " XXX",
+                  " BCK",
+                  " &nbsp;"
+                ]
+              },
+              {
+                "detailItems": [
+                  " 3",
+                  " Entfall",
+                  " SW Z5",
+                  " XXX",
+                  " XXX",
+                  " BIN",
+                  " &nbsp;"
+                ]
+              },
+              {
+                "detailItems": [
+                  " 3",
+                  " Entfall",
+                  " M G2",
+                  " XXX",
+                  " XXX",
+                  " BRT",
+                  " &nbsp;"
+                ]
+              },
+              {
+                "detailItems": [
+                  " 3",
+                  " Entfall",
+                  " D G1",
+                  " XXX",
+                  " XXX",
+                  " MHR",
+                  " &nbsp;"
+                ]
+              },
+              {
+                "detailItems": [
+                  " 3",
+                  " Entfall",
+                  " BI G1",
+                  " XXX",
+                  " XXX",
+                  " RA",
+                  " &nbsp;"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "title": "Montag, 11.02.2019",
+        "gradeItems": [
+          {
+            "grade": "Q2",
+            "vertretungsplanItems": [
+              {
+                "detailItems": [
+                  " 8 - 9",
+                  " Raum-Vtr.",
+                  " SP G4",
+                  " TU &rarr; SW",
+                  " SE",
+                  " SE",
+                  " Schwimmsachen mitbringen!",
+                  " EVA Text Montag 11.02.2019, SP G4"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "_digest": null
+  },
+  "oldSubstitutionSchedule": {}
+}

@@ -5,12 +5,14 @@ const CookieParser = require('cookie-parser');
 const Express = require('express');
 const Proxy = require('express-http-proxy');
 const Cron = require('cron');
+const urlParse = require('url-parse');
 
 const Config = require('./core-services/Config');
 const PostingsHandler = require('./v2-services/PostingsHandler');
 const NewsReqHandler = require('./v1-services/NewsReqHandler');
 const NewsReqHandlerV2 = require('./v2-services/NewsReqHandler');
 const VertretungsplanHandler = require('./v1-services/VertretungsplanHandler');
+const EvaRequestHandler = require('./v2-services/EvaRequestHandler');
 const CalendarHandler = require('./v1-services/CalendarHandler');
 const Pusher = require('./functional-services/Pusher');
 const SlackBot = require('./core-services/SlackBot');
@@ -138,6 +140,10 @@ class App {
       vertretungsplanHandler.process(req, res);
     });
 
+    router.get('/v2/eva', (req, res) => {
+      EvaRequestHandler.process(req, res);
+    });
+
     router.get('/vertretungsplan', (req, res) => {
       const vertretungsplanHandler = new VertretungsplanHandler();
       vertretungsplanHandler.process(req, res);
@@ -159,7 +165,8 @@ class App {
     // All other stuff is forwarded to Pius website.
     router.get(/.*/, Proxy(this.config.piusBaseUrl, {
       proxyReqPathResolver: function (req) {
-        return require('url').parse(req.originalUrl).path;
+        const url = urlParse(req.originalUrl);
+        return url.pathname;
       },
       userResDecorator: function (proxyRes, proxyResData, userReq) {
         if (userReq.originalUrl.match(/wordpress\/wp-admin\/admin-ajax.php/)) {

@@ -18,7 +18,7 @@ class EvaItem {
    */
   constructor(course, evaText) {
     this.uuid = uuid();
-    this.course = course;
+    this.course = course.replace(/ +/g, '');
     this.evaText = evaText;
   }
 }

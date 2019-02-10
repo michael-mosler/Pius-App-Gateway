@@ -163,7 +163,7 @@ class CalendarHandler {
 
         // When not modified do not send any data but report "not modified".
         // noinspection JSUnresolvedVariable
-        if (digest === req.query.digest) {
+        if (process.env.DIGEST_CHECK === 'true' && digest === req.query.digest) {
           // noinspection JSUnresolvedFunction
           res.status(304).end();
         } else {

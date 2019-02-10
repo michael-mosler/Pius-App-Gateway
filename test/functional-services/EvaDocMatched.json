@@ -1,0 +1,36 @@
+[
+  {
+    "date": "Donnerstag, 07.02.2019",
+    "epoch": 1,
+    "evaItems": [
+      {
+        "uuid": "Do 1",
+        "course": "MLK1",
+        "evaText": "Text 1, 07.02.2019"
+      }
+    ]
+  },
+  {
+    "date": "Freitag, 08.02.2019",
+    "epoch": 1,
+    "evaItems": [
+
+      {
+        "uuid": "Fr 2",
+        "course": "DGK2",
+        "evaText": "Text 2, 08.02.2019"
+      }
+    ]
+  },
+  {
+    "date": "Montag, 12.02.2019",
+    "epoch": 1,
+    "evaItems": [
+      {
+        "uuid": "Mo 1",
+        "course": "SPGK4",
+        "evaText": "Text 1, 12.02.2019"
+      }
+    ]
+  }
+]

@@ -1,3 +1,4 @@
+const request = require('request');
 const util = require('util');
 const clone = require('clone');
 const Config = require('../core-services/Config');
@@ -247,6 +248,32 @@ class VertretungsplanHelper {
       console.log(`ERROR: delta() failed with ${err}.\nInput: ${util.inspect(changeListItem, { depth: 8 })}\ncourse list: ${util.inspect(courseList, { depth: 8 })}`);
       throw err;
     }
+  }
+
+  /**
+   * The method validates login information that is given as basic authentication data.
+   * The data is checked by sending a HEAD request to Pius web site for URL /vertretungsplan.
+   * The HTTP status code simply is returned to App.
+   * @param {IncomingMessage} req - HTTP request object
+   * @returns {Promise<Number|Error>} - Returns HTTP status code or error object
+   */
+  static validateLogin(req) {
+    const options = {
+      url: 'http://pius-gymnasium.de/vertretungsplan/',
+      headers: {
+        'Authorization': req.header('authorization'),
+      },
+    };
+
+    return new Promise((resolve, reject) => {
+      request.head(options, (err, response) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(response.statusCode);
+        }
+      });
+    });
   }
 }
 

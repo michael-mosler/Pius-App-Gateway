@@ -27,7 +27,7 @@ class Pusher {
     };
 
     this.pushEventEmitter = new PushEventEmitter();
-    this.pushEventEmitter.on('push', (changeListItem) => this.push(changeListItem));
+    this.pushEventEmitter.on('push', changeListItem => this.push(changeListItem));
   }
 
   /**

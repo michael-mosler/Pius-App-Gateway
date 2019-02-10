@@ -1,10 +1,10 @@
 const NodeRestClient = require('node-rest-client').Client;
 // noinspection JSUnresolvedVariable
 const Html2Json = require('html2json').html2json;
-const request = require('request');
 const md5 = require('md5');
 const clone = require('clone');
 
+const VertretungsplanHelper = require('../helper/VertretungsplanHelper');
 const PushEventEmitter = require('../functional-services/PushEventEmitter');
 const Config = require('../core-services/Config');
 const BasicAuthProvider = require('../providers/BasicAuthProvider');
@@ -403,17 +403,14 @@ class VertretungsplanHandler {
    * @param {IncomingMessage} req - HTTP request object
    * @param {ServerResponse} res - Server response object
    */
-  validateLogin(req, res) {
-    const options = {
-      url: 'http://pius-gymnasium.de/vertretungsplan/',
-      headers: {
-        'Authorization': req.header('authorization'),
-      },
-    };
-
-    request.head(options, (err, response) => { // eslint-disable-line handle-callback-err
-      res.status(response.statusCode).end();
-    });
+  async validateLogin(req, res) {
+    try {
+      const statusCode = await VertretungsplanHelper.validateLogin(req);
+      res.status(statusCode).end();
+    } catch (err) {
+      console.log(`VertretungsplanHandler could not validate login: ${err}`);
+      res.status(503).end();
+    }
   }
 }
 
