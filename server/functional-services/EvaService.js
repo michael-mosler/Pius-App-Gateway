@@ -33,7 +33,8 @@ class EvaService {
    * @private
    */
   async merge(grade, date, evaItems) {
-    let currentEvaDoc = new EvaDoc((await this.evaDb.get(grade)) || { _id: grade });
+    const doc = await this.evaDb.get(grade);
+    let currentEvaDoc = new EvaDoc(_.extend(doc, { _id: grade }));
 
     // We need to check if currentEvaDoc contains the following collection item. If yes
     // we also need to check if this item has changed. If also yes we need to update

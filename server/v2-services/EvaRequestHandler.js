@@ -28,7 +28,7 @@ class EvaRequestHandler {
         // noinspection JSUnresolvedFunction
         res
           .status(200)
-          .send({ evaItems, newDigest });
+          .send({ evaItems, digest: newDigest });
       }
     } catch (err) {
       console.log(`EvaRequestHandler could not get EVA data: ${err}`);

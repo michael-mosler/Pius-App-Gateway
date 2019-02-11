@@ -19,7 +19,7 @@ class EvaItem {
   constructor(course, evaText) {
     this.uuid = uuid();
     this.course = course.replace(/ +/g, '');
-    this.evaText = evaText;
+    this.evaText = evaText.trim();
   }
 }
 
@@ -75,7 +75,9 @@ class EvaDoc {
   constructor(params) {
     const properties = _.extend({ _id: null, _rev: null, evaCollection: [], timestamp: null }, params);
     this._id = properties._id;
-    this._rev = properties._rev;
+    if (properties._rev) {
+      this._rev = properties._rev;
+    }
     this.evaCollection = properties.evaCollection;
     this.timestamp = properties.timestamp;
   }

@@ -15,6 +15,7 @@ const VertretungsplanHandler = require('./v1-services/VertretungsplanHandler');
 const EvaRequestHandler = require('./v2-services/EvaRequestHandler');
 const CalendarHandler = require('./v1-services/CalendarHandler');
 const Pusher = require('./functional-services/Pusher');
+const EvaService = require('./functional-services/EvaService');
 const SlackBot = require('./core-services/SlackBot');
 const DeviceTokenManager = require('./core-services/DeviceTokenManager');
 
@@ -31,11 +32,13 @@ const bot = new SlackBot();
 class App {
   constructor() {
     this.config = new Config();
+    this.pusher = null;
     this.pusherJob = null;
 
     this.initApp();
     this.expressApp = this.initMiddleware();
 
+    this.evaService = new EvaService();
     this.deviceTokenManager = new DeviceTokenManager();
     this.router = this.initRouting();
     this.expressApp.use('/', this.router);
