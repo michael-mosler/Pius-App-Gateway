@@ -1,4 +1,5 @@
 const util = require('util');
+const md5 = require('md5');
 const _ = require('underscore');
 const { EvaItem, EvaCollectionItem, EvaDoc } = require('../data-objects/EvaServiceData');
 const CloudantDb = require('../core-services/CloudantDb');
@@ -25,42 +26,23 @@ class EvaService {
   }
 
   /**
-   * Merges EVA items into existing items for the given grade.
-   * @param {String} grade - Grade to merge into
-   * @param {String} date - The date EVA items are assigned to
-   * @param {EvaItem[]} evaItems - Items to be merged
-   * @returns {Promise<*>}
-   * @private
-   */
-  async merge(grade, date, evaItems) {
-    const doc = await this.evaDb.get(grade);
-    let currentEvaDoc = new EvaDoc(_.extend(doc, { _id: grade }));
-
-    // We need to check if currentEvaDoc contains the following collection item. If yes
-    // we also need to check if this item has changed. If also yes we need to update
-    // evaDoc, when no we are done.
-    const newEvaCollectionItem = new EvaCollectionItem(date, evaItems);
-    if (!currentEvaDoc.contains(newEvaCollectionItem)) {
-      currentEvaDoc = currentEvaDoc.merge(newEvaCollectionItem);
-      return this.evaDb.insertDocument(currentEvaDoc);
-    }
-  }
-
-  /**
    * Receives a change list, extracts EVA texts from it and adds these to the current
    * context map. The function is triggered by push event. Update requests for
    * lower grades are ignored.
    * @param {Object} changeListItem - Change list as also received by {@link Pusher}
    * @private
    */
-  updateFrom(changeListItem) {
+  async updateFrom(changeListItem) {
     if (!VertretungsplanHelper.isUpperGrade(changeListItem.grade)) {
-      return Promise.resolve();
+      return;
     }
 
-    return new Promise((resolve) => {
+    try {
       console.log(`Updating EVA for ${changeListItem.grade}`);
-      const promises = [];
+
+      const doc = await this.evaDb.get(changeListItem.grade);
+      let evaDoc = new EvaDoc(_.extend(doc, { _id: changeListItem.grade }));
+
       const { substitutionSchedule } = changeListItem;
 
       substitutionSchedule.dateItems.forEach(dateItem => {
@@ -70,24 +52,33 @@ class EvaService {
         // When gradeItems is not empty there will be one entry only.
         // This entry is the grade where we are exracting EVA for.
         gradeItems.forEach(gradeItem => {
-          try {
-            const { grade } = gradeItem;
-            const { vertretungsplanItems = [] } = gradeItem;
-            const evaItems = vertretungsplanItems
-              .filter(vertretungsplanItem => vertretungsplanItem.detailItems[7] !== undefined)
-              .map(vertretungsplanItem => new EvaItem(vertretungsplanItem.detailItems[2], vertretungsplanItem.detailItems[7]));
+          const { grade } = gradeItem;
+          const { vertretungsplanItems = [] } = gradeItem;
+          const evaItems = vertretungsplanItems
+            .filter(vertretungsplanItem => vertretungsplanItem.detailItems[7] !== undefined)
+            .map(vertretungsplanItem => new EvaItem(vertretungsplanItem.detailItems[2], vertretungsplanItem.detailItems[7]));
 
-            console.log(`Merging items for ${grade}, ${date}: ${util.inspect(evaItems, { depth: 2 })}`);
-            promises.push(this.merge(grade, date, evaItems));
-          } catch (err) {
-            console.log(`Updating EVA items for grade ${gradeItem.grade} failed with: ${err}`);
+          console.log(`Merging items for ${grade}, ${date}: ${util.inspect(evaItems, { depth: 2 })}`);
+
+          // When new items are noc contained in doc merge them.
+          const newEvaCollectionItem = new EvaCollectionItem(date, evaItems);
+          if (!evaDoc.contains(newEvaCollectionItem)) {
+            evaDoc = evaDoc.merge(newEvaCollectionItem);
           }
         });
       });
 
-      Promise.all(promises)
-        .then(resolve());
-    });
+      const newHash = md5(JSON.stringify(evaDoc.evaCollection));
+      if (evaDoc.hash !== newHash) {
+        evaDoc.hash = newHash;
+        console.log(`Writing new EVA doc ${util.inspect(evaDoc, { depth: 3 })}`);
+        return this.evaDb.insertDocument(evaDoc);
+      } else {
+        console.log(`Digest has not changed, skipping update for ${changeListItem.grade}`);
+      }
+    } catch (err) {
+      console.log(`Failed to store updated EVA doc: ${err}`);
+    }
   }
 
   /**

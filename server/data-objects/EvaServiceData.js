@@ -73,13 +73,14 @@ class EvaDoc {
    * @param {Object} params - Object to instantiate new instance from.
    */
   constructor(params) {
-    const properties = _.extend({ _id: null, _rev: null, evaCollection: [], timestamp: null }, params);
+    const properties = _.extend({ _id: null, _rev: null, evaCollection: [], timestamp: null, hash: null }, params);
     this._id = properties._id;
     if (properties._rev) {
       this._rev = properties._rev;
     }
     this.evaCollection = properties.evaCollection;
     this.timestamp = properties.timestamp;
+    this.hash = properties.hash;
   }
 
   /**
