@@ -41,22 +41,23 @@ class EvaCollectionItem {
   }
 
   /**
-   * Converts date string to epoch, time of day is set to 00:00h.
+   * Converts date string to epoch, time of day is set to 00:00h in UTC.
    * @param {String} date - Date string to convert, format must be e.g. 'Freitag, 01.02.2019'
-   * @returns {Number} Epoch for the given date string
+   * @returns {Number} Epoch for the given date string in UTC
    * @throws {Error} When date string cannot be converted
    * @static
    */
   static toEpoch(date) {
     // Extract pure date from the given string. When patten is not found
-    // date cannot be processed, throw an error.
+    // date cannot be processed, throw an error. Epoch is taken from
+    // UTC time.
     const matches = date.match(/\d{2}\.\d{2}\.\d{4}/);
 
     if (!matches) {
       throw new Error(`Invalid date format in string "${date}"`);
     }
 
-    return (datetime.parse(matches[0], 'DD.MM.YYYY')).getTime() / 1000;
+    return (datetime.parse(`${matches[0]}`, 'DD.MM.YYYY', true)).getTime() / 1000;
   }
 }
 

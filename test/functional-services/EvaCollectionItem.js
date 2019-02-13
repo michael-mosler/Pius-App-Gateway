@@ -4,7 +4,7 @@ const { EvaCollectionItem } = require('../../server/data-objects/EvaServiceData'
 describe('EvaCollectionItem', () => {
   it('should compute epoche', () => {
     const evaCollectionItem = new EvaCollectionItem('Freitag, 01.02.2019', []);
-    expect(evaCollectionItem.epoch).toBe(1548975600);
+    expect(evaCollectionItem.epoch).toBe(1548979200);
   });
 
   it('should throw on invalid date format', () => {
