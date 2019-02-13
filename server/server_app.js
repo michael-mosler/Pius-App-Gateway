@@ -5,7 +5,7 @@ const CookieParser = require('cookie-parser');
 const Express = require('express');
 const Proxy = require('express-http-proxy');
 const Cron = require('cron');
-const urlParse = require('url-parse');
+const url = require('url');
 
 const Config = require('./core-services/Config');
 const PostingsHandler = require('./v2-services/PostingsHandler');
@@ -168,8 +168,8 @@ class App {
     // All other stuff is forwarded to Pius website.
     router.get(/.*/, Proxy(this.config.piusBaseUrl, {
       proxyReqPathResolver: function (req) {
-        const url = urlParse(req.originalUrl);
-        return url.pathname;
+        // eslint-disable-next-line node/no-deprecated-api
+        return url.parse(req.originalUrl).path;
       },
       userResDecorator: function (proxyRes, proxyResData, userReq) {
         if (userReq.originalUrl.match(/wordpress\/wp-admin\/admin-ajax.php/)) {
