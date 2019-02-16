@@ -18,7 +18,7 @@ class EvaItem {
    */
   constructor(course, evaText) {
     this.uuid = uuid();
-    this.course = course.replace(/ +/g, '');
+    this.course = course.trim();
     this.evaText = evaText.trim();
   }
 }
@@ -115,10 +115,10 @@ class EvaDoc {
   /**
    * Merge collection into document. When collection for the same epoch already exists
    * it is replaced otherwise collection is added to document. Operation is unconditionally,
-   * thus check with contains if merge is needed.
+   * thus check with contains if merge is needed. When a new date is added eva collection
+   * finally is sliced to 10 entries.
    * @param {EvaCollectionItem} newEvaCollectionItem - Item to merge into doc.
    * @returns {EvaDoc} Updated doc.
-   * @private
    */
   merge(newEvaCollectionItem) {
     const index = _.sortedIndex(this.evaCollection, newEvaCollectionItem, 'epoch');
@@ -127,9 +127,14 @@ class EvaDoc {
 
     // Same date replace otherwise insert
     if (epochAtIndex === newEvaCollectionItem.epoch) {
-      this.evaCollection[index] = newEvaCollectionItem;
+      let newEvaItems = _.values(_.extend(_.indexBy(this.evaCollection[index].evaItems, 'course'), _.indexBy(newEvaCollectionItem.evaItems, 'course')));
+      newEvaItems = newEvaItems.sort((a, b) => ((a.course < b.course) ? -1 : 1));
+      this.evaCollection[index].evaItems = newEvaItems;
     } else {
-      this.evaCollection.splice(index, 0, newEvaCollectionItem);
+      let newEvaCollection = this.evaCollection;
+      newEvaCollection.splice(index, 0, newEvaCollectionItem);
+      newEvaCollection = newEvaCollection.slice(0, 10);
+      this.evaCollection = newEvaCollection;
     }
 
     return this;

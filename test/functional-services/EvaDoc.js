@@ -63,20 +63,19 @@ describe('EvaDoc', () => {
   });
 
   it('should merge into existing doc with replace', () => {
+    const e1 = new EvaItem('D GK1', 'Eva Text 11');
+    const e2 = new EvaItem('D GK2', 'Eva Text 22');
+    const e3 = new EvaItem('D GK3', 'Eva Text 31');
+    const e4 = new EvaItem('D GK4', 'Eva Text 32');
+
     const evaItems1 = [
       new EvaItem('M GK1', 'Eva Text 11'),
       new EvaItem('M GK2', 'Eva Text 12'),
     ];
 
-    const evaItems2 = [
-      new EvaItem('D GK1', 'Eva Text 21'),
-      new EvaItem('D GK2', 'Eva Text 22'),
-    ];
-
-    const evaItems3 = [
-      new EvaItem('D GK3', 'Eva Text 31'),
-      new EvaItem('D GK4', 'Eva Text 32'),
-    ];
+    const evaItems2 = [e3, e4];
+    const evaItems3 = [e1, e2];
+    const evaItems4 = [e1, e2, e3, e4];
 
     const evaCollectionItem1 = new EvaCollectionItem('Freitag, 01.02.2019', evaItems1);
     const evaCollectionItem2 = new EvaCollectionItem('Montag, 04.02.2019', evaItems2);
@@ -87,10 +86,11 @@ describe('EvaDoc', () => {
 
     // Length of EVA Collection has not changed.
     expect(evaDoc.evaCollection.length).toBe(2);
-    expect(evaDoc.evaCollection[1]).toEqual(newEvaCollectionItem);
+    expect(evaDoc.evaCollection[1].evaItems.length).toBe(4);
+    expect(evaDoc.evaCollection[1].evaItems).toEqual(evaItems4);
   });
 
-  it('should merge into existing doc with add', () => {
+  it('should merge into existing doc with eva item merge', () => {
     const evaItems1 = [
       new EvaItem('M GK1', 'Eva Text 11'),
       new EvaItem('M GK2', 'Eva Text 12'),

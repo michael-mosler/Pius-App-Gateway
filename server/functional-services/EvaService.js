@@ -60,7 +60,7 @@ class EvaService {
 
           console.log(`Merging items for ${grade}, ${date}: ${util.inspect(evaItems, { depth: 2 })}`);
 
-          // When new items are noc contained in doc merge them.
+          // When new items are not contained in doc merge them.
           const newEvaCollectionItem = new EvaCollectionItem(date, evaItems);
           if (!evaDoc.contains(newEvaCollectionItem)) {
             evaDoc = evaDoc.merge(newEvaCollectionItem);
@@ -69,13 +69,16 @@ class EvaService {
       });
 
       const newHash = md5(JSON.stringify(evaDoc.evaCollection));
-      if (evaDoc.hash !== newHash) {
-        evaDoc.hash = newHash;
-        console.log(`Writing new EVA doc ${util.inspect(evaDoc, { depth: 3 })}`);
-        return this.evaDb.insertDocument(evaDoc);
-      } else {
-        console.log(`Digest has not changed, skipping update for ${changeListItem.grade}`);
-      }
+      console.log(`EVA doc ${changeListItem.grade} hash: new = ${newHash}, old = ${evaDoc.hash}`);
+      // if (true || evaDoc.hash !== newHash) {
+
+      evaDoc.hash = newHash;
+      console.log(`Writing new EVA doc ${util.inspect(evaDoc, { depth: 4 })}`);
+      return this.evaDb.insertDocument(evaDoc);
+
+      // } else {
+      //   console.log(`Digest has not changed, skipping update for ${changeListItem.grade}`);
+      // }
     } catch (err) {
       console.log(`Failed to store updated EVA doc: ${err}`);
     }
@@ -97,7 +100,7 @@ class EvaService {
     if (courseList && courseList.length !== 0) {
       const courses = courseList.replace(/ +/g, '').split(',');
       evaDoc.evaCollection.forEach(collectionItem => {
-        collectionItem.evaItems = collectionItem.evaItems.filter(evaItem => _.contains(courses, evaItem.course));
+        collectionItem.evaItems = collectionItem.evaItems.filter(evaItem => _.contains(courses, evaItem.course.replace(/ +/g, '')));
       });
     }
 
