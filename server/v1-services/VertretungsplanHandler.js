@@ -23,18 +23,26 @@ class VertretungsplanItem {
   }
 
   /**
-   * @returns {String|undefined}
-   */
-  get course() {
-    return this.detailItems[3];
-  }
-
-  /**
    * Returns EVA text or undefined when there is no EVA text.
    * @returns {String|undefined}
    */
   get evaText() {
     return this.detailItems[7];
+  }
+
+  /**
+   * Checks if detail items are in new format, i.e. "Aktueller Lehrer" property
+   * has been removed.
+   * @returns {Boolean}
+   */
+  get hasNewDetailItemFormat() {
+    // When EVA text is present we expect 8 items in old format.
+    if (this.evaText && this.detailItems.length < 8) {
+      return true;
+    }
+
+    // Otherwise we expect 7 items in old format.
+    return this.detailItems.length < 7;
   }
 }
 
@@ -196,9 +204,8 @@ class VertretungsplanHandler {
    * @TODO: Replace property vertretungsplan by volatile variable. This would make process method reentrant.
    * @param {Object} json - Current DOM node
    * @param {Object} parent - Parent DOM node
-   * @param {Boolean} isInItemList - True when itemList is parsed
    */
-  transform(json, parent, isInItemList = false) {
+  transform(json, parent) {
     if (json.node === 'text' && json.text.match(/^Vertretungs- und Klausurplan/)) {
       // Skip repeated items which might occur due to a bug on Pius web site.
       const dateItem = new DateItem(json.text);
@@ -231,7 +238,6 @@ class VertretungsplanHandler {
       }
 
       this.vertretungsplan.currentDateItem.currentGradeItem.currentVertretungsplanItem.detailItems.push(text.replace(/\s\s+/, ' '));
-      isInItemList = true;
     } else if (json.attr && json.attr.class instanceof Array && json.attr.class[0] === 'eva') {
       const text = VertretungsplanHandler.mergeSubTextItems(json);
       this.vertretungsplan.currentDateItem.currentGradeItem.currentVertretungsplanItem.detailItems.push(text.replace(/\s\s+/, ' '));
@@ -248,7 +254,6 @@ class VertretungsplanHandler {
       }
 
       this.vertretungsplan.currentDateItem.currentGradeItem.currentVertretungsplanItem.detailItems.push(text.replace(/\s\s+/, ' '));
-      isInItemList = true;
     } else if (json.node === 'text' && this.vertretungsplan.tickerText && this.vertretungsplan.dateItems.length === 0) {
       this.vertretungsplan.additionalText = json.text;
     }
@@ -257,14 +262,26 @@ class VertretungsplanHandler {
       json.child.forEach((child) => {
         // This check tests if a new Vertretungsplan item for the current grade and date is started by the
         // current child. If so another item is pushed onto item list.
+        let index = -1;
         if (child.node === 'element' && child.tag === 'tr') {
-          const index = child.child.findIndex(grandChild => (grandChild.attr && grandChild.attr.class === 'vertretung'));
+          index = child.child.findIndex(grandChild => (grandChild.attr && grandChild.attr.class === 'vertretung'));
           if (index > -1) {
             this.vertretungsplan.currentDateItem.currentGradeItem.vertretungsplanItems.push(new VertretungsplanItem());
           }
         }
 
-        this.transform(child, json, isInItemList);
+        this.transform(child, json);
+
+        // ****************************************************************************************************
+        // Check for new format as of March, 2nd 2019. Column "Aktueller Lehrer" is removed.
+        // This, total number of detail items is decreased by 1. To prevent app from crashing
+        // we need to add it as blank array item.
+        const { currentDateItem: { currentGradeItem: { currentVertretungsplanItem } = {} } = {} } = this.vertretungsplan;
+        if (index > -1 && currentVertretungsplanItem && currentVertretungsplanItem.hasNewDetailItemFormat) {
+          // console.log(currentVertretungsplanItem.detailItems.length);
+          currentVertretungsplanItem.detailItems.splice(5, 0, ' ');
+        }
+        // ****************************************************************************************************
       });
     }
   }
@@ -291,23 +308,28 @@ class VertretungsplanHandler {
       },
     }, (data, response) => {
       if (response.statusCode === 200) {
-        const strData = data.toString();
-        const digest = md5(strData);
+        try {
+          const strData = data.toString();
+          const digest = md5(strData);
 
-        // When not modified do not send any data but report "not modified".
-        // noinspection JSUnresolvedVariable
-        if (process.env.DIGEST_CHECK === 'true' && digest === req.query.digest) {
-          res.status(304).end();
-        } else {
-          const json = Html2Json(strData);
-          this.transform(json);
-
+          // When not modified do not send any data but report "not modified".
           // noinspection JSUnresolvedVariable
-          this.vertretungsplan.filter(req.query.forGrade);
-          this.vertretungsplan.digest = digest;
-          res
-            .status(response.statusCode)
-            .send(this.vertretungsplan);
+          if (process.env.DIGEST_CHECK === 'true' && digest === req.query.digest) {
+            res.status(304).end();
+          } else {
+            const json = Html2Json(strData);
+            this.transform(json);
+
+            // noinspection JSUnresolvedVariable
+            this.vertretungsplan.filter(req.query.forGrade);
+            this.vertretungsplan.digest = digest;
+            res
+              .status(response.statusCode)
+              .send(this.vertretungsplan);
+          }
+        } catch (err) {
+          console.log(`Error when transforming substitution schedule: ${err}`);
+          res.status(500).end();
         }
       } else {
         res.status(response.statusCode).end();

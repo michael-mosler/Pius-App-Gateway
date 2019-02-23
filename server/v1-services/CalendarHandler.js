@@ -156,22 +156,27 @@ class CalendarHandler {
     this.client.get(calendarURL, (data, response) => {
       let json;
       if (response.statusCode === 200) {
-        const strData = data.toString();
-        const digest = md5(strData);
-        json = Html2Json(strData);
-        this.transform(json);
+        try {
+          const strData = data.toString();
+          const digest = md5(strData);
+          json = Html2Json(strData);
+          this.transform(json);
 
-        // When not modified do not send any data but report "not modified".
-        // noinspection JSUnresolvedVariable
-        if (process.env.DIGEST_CHECK === 'true' && digest === req.query.digest) {
-          // noinspection JSUnresolvedFunction
-          res.status(304).end();
-        } else {
-          this.calendar.digest = digest;
-          // noinspection JSUnresolvedFunction
-          res
-            .status(response.statusCode)
-            .send(this.calendar);
+          // When not modified do not send any data but report "not modified".
+          // noinspection JSUnresolvedVariable
+          if (process.env.DIGEST_CHECK === 'true' && digest === req.query.digest) {
+            // noinspection JSUnresolvedFunction
+            res.status(304).end();
+          } else {
+            this.calendar.digest = digest;
+            // noinspection JSUnresolvedFunction
+            res
+              .status(response.statusCode)
+              .send(this.calendar);
+          }
+        } catch (err) {
+          console.log(`Error when transforming calendar data: ${err}`);
+          res.status(500).end();
         }
       } else {
         // noinspection JSUnresolvedFunction

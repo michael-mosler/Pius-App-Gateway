@@ -1,15 +1,19 @@
 # Directories in app root to be ignored
 /doc
+/test
 
 # All node_modules directories
 /node_modules
 
 # Files in app root.
+/apn-credentials.json
 /build-*
 /conf.json
 /.DS_Store
 /.eslintrc.js
 /.gitignore
 /pius-gateway.env
+/pius-vertretungsplan-credentials.json
 README.md
+/slack-token.json
 /.vscode

@@ -52,7 +52,7 @@ class App {
     process.on('SIGTERM', () => process.exit(0));
     process.on('SIGINT', () => process.exit(0));
     process.on('uncaughtException', (err) => {
-      console.log(`Unhandled exception exception: ${err}`);
+      console.log(`Unhandled exception: ${err}`);
       bot.post(`Pius-Gateway crashed with an unhandled exception: ${err}`);
       process.exit(-1);
     });
@@ -117,6 +117,24 @@ class App {
   }
 
   /**
+   * Takes a function f that processes an incoming Express request and sends result on
+   * res object and encapsulates it into a try-catch block. Catch will log error and
+   * send HTTP status 503.
+   * @param {Function} f A function that takes Express (req, res) as input, can be async.
+   * @returns {Function} Catchified function.
+   */
+  static catchify(f) {
+    return async (req, res) => {
+      try {
+        await f(req, res);
+      } catch (err) {
+        console.log(`Function ${f} failed: ${err}`);
+        res.send(503).end();
+      }
+    };
+  }
+
+  /**
    * Initialise Express routing.
    * @private
    */
@@ -129,41 +147,41 @@ class App {
       },
     }));
 
-    router.get(/^\/v2\/news$/, (req, res) => {
+    router.get(/^\/v2\/news$/, App.catchify((req, res) => {
       NewsReqHandlerV2.getNewsFromHomePage(req, res);
-    });
+    }));
 
-    router.get('/v2/postings', (req, res) => {
+    router.get('/v2/postings', App.catchify((req, res) => {
       const postingsHandler = new PostingsHandler();
       postingsHandler.process(req, res);
-    });
+    }));
 
-    router.get('/v2/vertretungsplan', (req, res) => {
+    router.get('/v2/vertretungsplan', App.catchify((req, res) => {
       const vertretungsplanHandler = new VertretungsplanHandler('v2');
       vertretungsplanHandler.process(req, res);
-    });
+    }));
 
-    router.get('/v2/eva', (req, res) => {
+    router.get('/v2/eva', App.catchify((req, res) => {
       EvaRequestHandler.process(req, res);
-    });
+    }));
 
-    router.get('/vertretungsplan', (req, res) => {
+    router.get('/vertretungsplan', App.catchify((req, res) => {
       const vertretungsplanHandler = new VertretungsplanHandler();
       vertretungsplanHandler.process(req, res);
-    });
+    }));
 
-    router.get('/calendar', (req, res) => {
+    router.get('/calendar', App.catchify((req, res) => {
       const calendarHandler = new CalendarHandler();
       calendarHandler.process(req, res);
-    });
+    }));
 
-    router.get('/validateLogin', (req, res) => {
+    router.get('/validateLogin', App.catchify((req, res) => {
       const vertretungsplanHandler = new VertretungsplanHandler();
       vertretungsplanHandler.validateLogin(req, res);
-    });
+    }));
 
     // Device Token Manager routes.
-    router.post('/deviceToken', (req, res) => this.deviceTokenManager.registerDeviceToken(req, res));
+    router.post('/deviceToken', App.catchify((req, res) => this.deviceTokenManager.registerDeviceToken(req, res)));
 
     // All other stuff is forwarded to Pius website.
     router.get(/.*/, Proxy(this.config.piusBaseUrl, {
