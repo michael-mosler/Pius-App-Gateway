@@ -26,6 +26,31 @@ describe('EvaDoc', () => {
     expect(evaDoc.contains(newEvaCollectionItem)).toBeTruthy();
   });
 
+  it('should not find collection item with extenstion', () => {
+    const evaItems1 = [
+      new EvaItem('M GK1', 'Eva Text 11'),
+      new EvaItem('M GK2', 'Eva Text 12'),
+    ];
+
+    const evaItems2 = [
+      new EvaItem('D GK1', 'Eva Text 21'),
+      new EvaItem('D GK2', 'Eva Text 22'),
+    ];
+
+    const evaItems3 = [
+      new EvaItem('D GK1', 'Eva Text 21'),
+      new EvaItem('D GK2', 'Eva Text 22'),
+      new EvaItem('D G32', 'Eva Text 22'),
+    ];
+
+    const evaCollectionItem1 = new EvaCollectionItem('Freitag, 01.02.2019', evaItems1);
+    const evaCollectionItem2 = new EvaCollectionItem('Montag, 04.02.2019', evaItems2);
+    const newEvaCollectionItem = new EvaCollectionItem('Montag, 04.02.2019', evaItems3);
+
+    const evaDoc = new EvaDoc({ evaCollection: [evaCollectionItem1, evaCollectionItem2] });
+    expect(evaDoc.contains(newEvaCollectionItem)).toBeFalsy();
+  });
+
   it('should not find new collection item', () => {
     const evaItems1 = [
       new EvaItem('M GK1', 'Eva Text 11'),
@@ -59,6 +84,19 @@ describe('EvaDoc', () => {
     const newEvaCollectionItem = new EvaCollectionItem('Montag, 04.02.2019', evaItems3);
 
     const evaDoc = new EvaDoc();
+    expect(evaDoc.contains(newEvaCollectionItem)).toBeFalsy();
+  });
+
+  it('should not find collection item in empty eva item list', () => {
+    const evaItems3 = [
+      new EvaItem('D GK3', 'Eva Text 31'),
+      new EvaItem('D GK4', 'Eva Text 32'),
+    ];
+
+    const newEvaCollectionItem = new EvaCollectionItem('Montag, 04.02.2019', evaItems3);
+
+    const evaCollectionItem = new EvaCollectionItem('Montag, 04.02.2019', []);
+    const evaDoc = new EvaDoc({ evaCollection: [evaCollectionItem] });
     expect(evaDoc.contains(newEvaCollectionItem)).toBeFalsy();
   });
 

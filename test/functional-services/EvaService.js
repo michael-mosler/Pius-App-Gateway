@@ -120,7 +120,7 @@ describe('EvaService', () => {
 
       const EvaService = require('../../server/functional-services/EvaService');
       const evaService = new EvaService();
-      let r = await evaService.getEvaItems('EF', 'M LK1, D GK2, SP GK4');
+      let r = await evaService.getEvaItems('EF', 'MLK1,DGK2,SPGK4');
       expect(r).toEqual(evaDocMatched);
     } catch (err) {
       expect(false).toBeTruthy(err);

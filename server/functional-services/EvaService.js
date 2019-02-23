@@ -98,7 +98,7 @@ class EvaService {
 
     // Filter eva items by course list when course list is given.
     if (courseList && courseList.length !== 0) {
-      const courses = courseList.replace(/ +/g, '').split(',');
+      const courses = courseList.split(',');
       evaDoc.evaCollection.forEach(collectionItem => {
         collectionItem.evaItems = collectionItem.evaItems.filter(evaItem => _.contains(courses, evaItem.course.replace(/ +/g, '')));
       });

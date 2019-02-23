@@ -101,15 +101,21 @@ class EvaDoc {
       return false;
     }
 
-    // Found, is the new collection item equal to the already record one, i.e. are all eva items the same?
+    // Found, is the new collection item equal to the already recorded one, i.e. are all eva items the same?
+    // This true if |list1 intersect list2| === 0.
     const newEvaItems = newEvaCollectionItem.evaItems.map(item => ({ course: item.course, evaText: item.evaText }));
-    const diff = _.reject(
+    let diff1 = _.reject(
       evaCollectionItem.evaItems.map(item => ({ course: item.course, evaText: item.evaText })),
       evaItem1 => _.find(newEvaItems, evaItem2 => evaItem1.course === evaItem2.course && evaItem1.evaText === evaItem2.evaText)
     );
 
+    let diff2 = _.reject(
+      newEvaItems.map(item => ({ course: item.course, evaText: item.evaText })),
+      evaItem1 => _.find(evaCollectionItem.evaItems, evaItem2 => evaItem1.course === evaItem2.course && evaItem1.evaText === evaItem2.evaText)
+    );
+
     // Yes it is when difference of both eva item lists is empty.
-    return diff.length === 0;
+    return diff1.length + diff2.length === 0;
   }
 
   /**
