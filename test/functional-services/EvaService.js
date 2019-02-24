@@ -40,12 +40,46 @@ describe('EvaService', () => {
       .thenReturn({ test: 'object2' });
 
     td.when(EvaDoc.prototype.constructor(td.matchers.contains({ _id: 'Q2', test: 'object' })))
-      .thenReturn({ _id: 'Q2', test: 'object', contains: () => true });
+      .thenReturn({ _id: 'Q2', test: 'object', evaCollection: [], contains: () => true });
 
     const EvaService = require('../../server/functional-services/EvaService');
 
     const evaService = new EvaService();
-    await evaService.updateFrom(changeListItem);
+    const doc = await evaService.updateFrom(changeListItem);
+    expect(doc).not.toBeNull();
+  });
+
+  it('should not fail on insertDocument error', async () => {
+    let { EvaCollectionItem, EvaItem, EvaDoc } = td.replace('../../server/data-objects/EvaServiceData');
+
+    const fs = require('fs');
+    const changeListItem = JSON.parse(fs.readFileSync('./test/functional-services/ChangeListItem.json'));
+
+    td.when(CloudantDb.prototype.get('Q2'))
+      .thenReturn({ test: 'object' });
+    td.when(CloudantDb.prototype.insertDocument(td.matchers.contains({ _id: 'Q2', test: 'object' })))
+      .thenReject(new Error('Document update error'));
+
+    td.when(EvaItem.prototype.constructor(' D L1', ' EVA Text Freitag 08.02.2019, D L1'), { times: 1 })
+      .thenReturn({ course: ' D L1', evaText: ' EVA Text Freitag 08.02.2019, D L1' });
+    td.when(EvaItem.prototype.constructor(' SP G4', ' EVA Text Montag 11.02.2019, SP G4'), { times: 1 })
+      .thenReturn({ course: ' SP G4', evaText: ' EVA Text Montag 11.02.2019, SP G4' });
+
+    td.when(EvaCollectionItem.prototype.constructor('Donnerstag, 07.02.2019', []))
+      .thenReturn({ test: 'object0' });
+    td.when(EvaCollectionItem.prototype.constructor('Freitag, 08.02.2019', [{ course: ' D L1', evaText: ' EVA Text Freitag 08.02.2019, D L1' }]))
+      .thenReturn({ test: 'object1' });
+    td.when(EvaCollectionItem.prototype.constructor('Montag, 11.02.2019', [{ course: ' SP G4', evaText: ' EVA Text Montag 11.02.2019, SP G4' }]))
+      .thenReturn({ test: 'object2' });
+
+    td.when(EvaDoc.prototype.constructor(td.matchers.contains({ _id: 'Q2', test: 'object' })))
+      .thenReturn({ _id: 'Q2', test: 'object', evaCollection: [], contains: () => true });
+
+    const EvaService = require('../../server/functional-services/EvaService');
+
+    const evaService = new EvaService();
+    const doc = await evaService.updateFrom(changeListItem);
+    expect(doc).toBeNull();
   });
 
   it('should update when changed', async () => {
@@ -76,19 +110,20 @@ describe('EvaService', () => {
       .thenReturn(false);
     const merge = td.function();
     td.when(merge({ test: 'object0' }))
-      .thenReturn({ contains, merge });
+      .thenReturn({ evaCollection: [], contains, merge });
     td.when(merge({ test: 'object1' }))
-      .thenReturn({ contains, merge });
+      .thenReturn({ evaCollection: [], contains, merge });
     td.when(merge({ test: 'object2' }))
-      .thenReturn({ contains, merge });
+      .thenReturn({ evaCollection: [], contains, merge });
 
     td.when(EvaDoc.prototype.constructor(td.matchers.contains({ _id: 'Q2', test: 'object' })))
-      .thenReturn({ _id: 'Q2', test: 'object', contains, merge });
+      .thenReturn({ _id: 'Q2', test: 'object', evaCollection: [], contains, merge });
 
     const EvaService = require('../../server/functional-services/EvaService');
 
     const evaService = new EvaService();
-    await evaService.updateFrom(changeListItem);
+    const doc = await evaService.updateFrom(changeListItem);
+    expect(doc).not.toBeNull();
   });
 
   it('should update on event', (done) => {

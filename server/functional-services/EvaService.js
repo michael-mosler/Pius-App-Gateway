@@ -6,6 +6,8 @@ const CloudantDb = require('../core-services/CloudantDb');
 const PushEventEmitter = require('./PushEventEmitter');
 const VertretungsplanHelper = require('../helper/VertretungsplanHelper');
 
+let instance;
+
 /**
  * This class provides all required functions to manage
  * EVA history. This comprises:
@@ -20,9 +22,15 @@ const VertretungsplanHelper = require('../helper/VertretungsplanHelper');
  */
 class EvaService {
   constructor() {
-    this.evaDb = new CloudantDb('eva');
-    this.pushEventEmitter = new PushEventEmitter();
-    this.pushEventEmitter.on('push', changeListItem => this.updateFrom(changeListItem));
+    if (!instance) {
+      this.evaDb = new CloudantDb('eva');
+      this.pushEventEmitter = new PushEventEmitter();
+      this.pushEventEmitter.on('push', changeListItem => this.updateFrom(changeListItem));
+
+      instance = this;
+    }
+
+    return instance;
   }
 
   /**
@@ -74,13 +82,16 @@ class EvaService {
 
       evaDoc.hash = newHash;
       console.log(`Writing new EVA doc ${util.inspect(evaDoc, { depth: 4 })}`);
-      return this.evaDb.insertDocument(evaDoc);
+
+      const newDoc = await this.evaDb.insertDocument(evaDoc);
+      return newDoc;
 
       // } else {
       //   console.log(`Digest has not changed, skipping update for ${changeListItem.grade}`);
       // }
     } catch (err) {
       console.log(`Failed to store updated EVA doc: ${err}`);
+      return null;
     }
   }
 

@@ -5,29 +5,37 @@ const PushEventEmitter = require('./PushEventEmitter');
 const DeviceTokenManager = require('../core-services/DeviceTokenManager');
 const VertretungsplanHelper = require('../helper/VertretungsplanHelper');
 
+let instance;
+
 /**
  * This class on instantiation registers on 'push' event. When such an event is received
  * a push notification is sent to all devices that match the events grade property.
  */
 class Pusher {
   constructor() {
-    this.deviceTokenManager = new DeviceTokenManager();
-    this.apnProvider = null;
-    this.apnConnShutdownTimer = null;
-    this.pendingNotifications = 0;
+    if (!instance) {
+      this.deviceTokenManager = new DeviceTokenManager();
+      this.apnProvider = null;
+      this.apnConnShutdownTimer = null;
+      this.pendingNotifications = 0;
 
-    const credentials = Config.upsMap.get('apns');
-    this.options = {
-      token: {
-        key: Buffer.from(credentials.token.key),
-        keyId: credentials.token.keyId,
-        teamId: credentials.token.teamId,
-      },
-      production: process.env.APN_PRODUCTION === 'true',
-    };
+      const credentials = Config.upsMap.get('apns');
+      this.options = {
+        token: {
+          key: Buffer.from(credentials.token.key),
+          keyId: credentials.token.keyId,
+          teamId: credentials.token.teamId,
+        },
+        production: process.env.APN_PRODUCTION === 'true',
+      };
 
-    this.pushEventEmitter = new PushEventEmitter();
-    this.pushEventEmitter.on('push', changeListItem => this.push(changeListItem));
+      this.pushEventEmitter = new PushEventEmitter();
+      this.pushEventEmitter.on('push', changeListItem => this.push(changeListItem));
+
+      instance = this;
+    }
+
+    return instance;
   }
 
   /**
