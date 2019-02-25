@@ -1,4 +1,4 @@
-const NodeRestClient = require('node-rest-client').Client;
+const request = require('request');
 // noinspection JSUnresolvedVariable
 const Html2Json = require('html2json').html2json;
 const md5 = require('md5');
@@ -164,7 +164,7 @@ class VertretungsplanHandler {
    * @param {String} [version='v1'] - Requested version
    */
   constructor(version = 'v1') {
-    this.client = new NodeRestClient();
+    this.request = request;
     this.version = version;
     this.vertretungsplan = new Vertretungsplan();
   }
@@ -302,12 +302,15 @@ class VertretungsplanHandler {
    */
   process(req, res) {
     // noinspection JSUnresolvedFunction
-    this.client.get(vertretungsplanURL, {
+    this.request.get(vertretungsplanURL, {
       headers: {
         'Authorization': req.header('authorization'),
       },
-    }, (data, response) => {
-      if (response.statusCode === 200) {
+    }, (error, response, data) => {
+      if (error) {
+        console.log(`Failed to load substition schedule: ${error}`);
+        res.status(503).end();
+      } if (response.statusCode === 200) {
         try {
           const strData = data.toString();
           const digest = md5(strData);
@@ -334,19 +337,7 @@ class VertretungsplanHandler {
       } else {
         res.status(response.statusCode).end();
       }
-    })
-      .on('requestTimeout', (err) => {
-        console.log(`Get request on substitution schedule has timed out: ${err}`);
-        res.status(408).end();
-      })
-      .on('responseTimeout', (err) => {
-        console.log(`Get response on substitution schedule has timed out: ${err}`);
-        res.status(408).end();
-      })
-      .on('error', (err) => {
-        console.log(`Error when getting substitution schedule: ${err}`);
-        res.status(503).end();
-      });
+    });
   }
 
   /**
@@ -363,12 +354,14 @@ class VertretungsplanHandler {
 
     basicAuthProvider.getAuthInfo()
       .then((authInfo) => {
-        this.client.get(vertretungsplanURL, {
+        this.request.get(vertretungsplanURL, {
           headers: {
             'Authorization': `Basic ${authInfo}`,
           },
-        }, (data, response) => {
-          if (response.statusCode === 200) {
+        }, (error, response, data) => {
+          if (error) {
+            console.log(`Failed to load substitution schedule for checker: ${error}`);
+          } else if (response.statusCode === 200) {
             const substitionScheduleHashessDb = new SubstitionScheduleHashessDb();
             const strData = data.toString();
 
@@ -397,19 +390,7 @@ class VertretungsplanHandler {
           } else {
             console.log(`Checker failed to get latest data with status ${response.statusCode}\n`);
           }
-        })
-          .on('requestTimeout', (err) => {
-            console.log(`Get request on substitution schedule has timed out: ${err}`);
-            console.log('Skipping this push run.');
-          })
-          .on('responseTimeout', (err) => {
-            console.log(`Get response on substitution schedule has timed out: ${err}`);
-            console.log('Skipping this push run.');
-          })
-          .on('error', (err) => {
-            console.log(`Error when getting substitution: ${err}`);
-            console.log('Skipping this push run.');
-          });
+        });
       })
       .catch((err) => {
         console.log(`Check failed with a rejected promise: ${err}\n`);

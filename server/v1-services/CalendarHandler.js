@@ -1,7 +1,9 @@
-const NodeRestClient = require('node-rest-client').Client;
 const Html2Json = require('html2json').html2json;
 const md5 = require('md5');
+const request = require('request');
+const cachedRequest = require('cached-request')(request);
 
+const Config = require('../core-services/Config');
 const calendarURL = 'http://pius-gymnasium.de/internes/a/termine.html';
 
 /**
@@ -58,9 +60,10 @@ class Calendar {
 
 class CalendarHandler {
   constructor() {
-    this.client = new NodeRestClient();
     this.calendar = new Calendar();
-    ;
+    this.request = cachedRequest;
+    this.request.setCacheDirectory('/tmp');
+    this.request.setValue('ttl', Config.cacheTTL);
   }
 
   /**
@@ -153,9 +156,13 @@ class CalendarHandler {
    */
   process(req, res) {
     // noinspection JSUnresolvedFunction
-    this.client.get(calendarURL, (data, response) => {
+    this.request({ method: 'GET', url: calendarURL }, (error, response, data) => {
       let json;
-      if (response.statusCode === 200) {
+
+      if (error) {
+        console.log(`Failed to load calendar data: ${error}`);
+        res.status(503).end();
+      } else if (response.statusCode === 200) {
         try {
           const strData = data.toString();
           const digest = md5(strData);
@@ -182,19 +189,7 @@ class CalendarHandler {
         // noinspection JSUnresolvedFunction
         res.status(response.statusCode).end();
       }
-    })
-      .on('requestTimeout', (err) => {
-        console.log(`Get request on calendar has timed out: ${err}`);
-        res.status(408).end();
-      })
-      .on('responseTimeout', (err) => {
-        console.log(`Get response on calendar has timed out: ${err}`);
-        res.status(408).end();
-      })
-      .on('error', (err) => {
-        console.log(`Error when getting calendar: ${err}`);
-        res.status(503).end();
-      });
+    });
   }
 }
 

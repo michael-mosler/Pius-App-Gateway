@@ -148,7 +148,8 @@ class App {
     }));
 
     router.get(/^\/v2\/news$/, App.catchify((req, res) => {
-      NewsReqHandlerV2.getNewsFromHomePage(req, res);
+      const newsReqHandler = new NewsReqHandlerV2();
+      newsReqHandler.getNewsFromHomePage(req, res);
     }));
 
     router.get('/v2/postings', App.catchify((req, res) => {

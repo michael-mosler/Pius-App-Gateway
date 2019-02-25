@@ -1,8 +1,11 @@
-const NodeRestClient = require('node-rest-client').Client;
 const Cheerio = require('cheerio');
 const UrlParse = require('url-parse');
 const md5 = require('md5');
+const request = require('request');
+const cachedRequest = require('cached-request')(request);
 const Config = require('../core-services/Config');
+
+let instance;
 
 class NewsItem {
   constructor(img, href, heading, text) {
@@ -17,24 +20,43 @@ class NewsItem {
   }
 }
 
+class RequestError extends Error {
+  constructor(message, statusCode) {
+    super(message);
+    this.statusCode = statusCode;
+  }
+}
+
 class NewsReqHandler {
+  constructor() {
+    if (!instance) {
+      this.config = new Config();
+      this.request = cachedRequest;
+      this.request.setCacheDirectory('/tmp');
+      this.request.setValue('ttl', Config.cacheTTL);
+      instance = this;
+    }
+
+    return instance;
+  }
   /**
    * Load Pius Gymnasium Homepage and resolve promise with HTML document
    * in case of success. In case of error rejects promise with HTTP status
    * code.
    * @returns {Promise}
-   * @static
    * @private
    */
-  static loadHomePage() {
+  loadHomePage() {
     return new Promise((resolve, reject) => {
-      const restClient = new NodeRestClient();
-      const config = new Config();
-      restClient.get(config.piusBaseUrl, (data, response) => {
+      this.request({ method: 'get', url: this.config.piusBaseUrl }, (error, response, data) => {
+        if (error) {
+          reject(new RequestError(`Failed to load news data: ${error}`, 503));
+        }
+
         if (response.statusCode === 200) {
           resolve(data);
         } else {
-          reject(response.statusCode);
+          reject(new RequestError('Loading news data returned HTTP status other than 200', response.statusCode));
         }
       });
     });
@@ -44,12 +66,11 @@ class NewsReqHandler {
    * Extracts news section from Pius home page.
    * @param {Object} data - Web page content
    * @returns {String} HTML page with header removed
-   * @static
    * @private
    */
-  static async getNewsFromHomePage(req, res) {
+  async getNewsFromHomePage(req, res) {
     try {
-      const data = await NewsReqHandler.loadHomePage();
+      const data = await this.loadHomePage();
       const $ = Cheerio.load(data.toString());
 
       // Iterate on all Uber Grid cells
@@ -96,8 +117,9 @@ class NewsReqHandler {
       } else {
         res.status(200).send({ newsItems, _digest: digest });
       }
-    } catch (statusCode) {
-      res.status(statusCode).end();
+    } catch (error) {
+      console.log(`Loading news data failed: ${error}`);
+      res.status(error.statusCode).end();
     }
   }
 

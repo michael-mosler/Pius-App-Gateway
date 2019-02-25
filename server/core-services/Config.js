@@ -1,5 +1,9 @@
 let instance;
 
+/**
+ * Configuration properties.
+ * @property {Number} cacheTTL - Cache TTL, defaults to 15 minutes when env. variable TTL unset.
+ */
 class Config {
   constructor() {
     if (!instance) {
@@ -11,6 +15,15 @@ class Config {
     }
 
     return instance;
+  }
+
+  static get cacheTTL() {
+    const ttl = process.env.TTL || 15; // Minutes
+    if (isNaN(ttl)) {
+      return 900000; // 15 Minutes by default
+    }
+
+    return ttl * 60 * 1000;
   }
 
   static get grades() {

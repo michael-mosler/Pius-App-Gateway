@@ -1,13 +1,13 @@
 {
   "name": "pius-gateway",
-  "version": "2.2.1",
+  "version": "2.2.2",
   "description": "Pius Website Gateway for Pius App",
   "repository": {
     "type": "git",
     "url": "git@github.org:Pius-Gateway.git"
   },
   "engines": {
-    "node": "8.11.x",
+    "node": "10.x.x",
     "npm": "6.4.x"
   },
   "author": "Michael Mosler-Krings, Felix Krings",
@@ -17,6 +17,7 @@
     "apn": "^2.2.0",
     "async-retry": "^1.2.3",
     "body-parser": "^1.18.3",
+    "cached-request": "^1.1.4",
     "cheerio": "^1.0.0-rc.2",
     "clone": "^2.1.2",
     "compression": "^1.7.3",
@@ -30,7 +31,6 @@
     "ipaddr": "0.0.9",
     "ipaddr.js": "^1.9.0",
     "md5": "^2.2.1",
-    "node-rest-client": "^3.1.0",
     "request": "^2.88.0",
     "slack": "^11.0.2",
     "underscore": "^1.9.1",
