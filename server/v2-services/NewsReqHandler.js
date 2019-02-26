@@ -48,17 +48,21 @@ class NewsReqHandler {
    */
   loadHomePage() {
     return new Promise((resolve, reject) => {
-      this.request({ method: 'get', url: this.config.piusBaseUrl }, (error, response, data) => {
-        if (error) {
-          reject(new RequestError(`Failed to load news data: ${error}`, 503));
-        }
+      try {
+        this.request({ method: 'get', url: this.config.piusBaseUrl }, (error, response, data) => {
+          if (error) {
+            reject(new RequestError(`Failed to load news data: ${error}`, 503));
+          }
 
-        if (response.statusCode === 200) {
-          resolve(data);
-        } else {
-          reject(new RequestError('Loading news data returned HTTP status other than 200', response.statusCode));
-        }
-      });
+          if (response.statusCode === 200) {
+            resolve(data);
+          } else {
+            reject(new RequestError('Loading news data returned HTTP status other than 200', response.statusCode));
+          }
+        });
+      } catch (err) {
+        reject(new RequestError(err, 503));
+      }
     });
   }
 
