@@ -2,7 +2,6 @@ const Cheerio = require('cheerio');
 const UrlParse = require('url-parse');
 const md5 = require('md5');
 const request = require('request');
-const cachedRequest = require('cached-request')(request);
 const Config = require('../core-services/Config');
 
 let instance;
@@ -31,9 +30,7 @@ class NewsReqHandler {
   constructor() {
     if (!instance) {
       this.config = new Config();
-      this.request = cachedRequest;
-      this.request.setCacheDirectory('/tmp');
-      this.request.setValue('ttl', Config.cacheTTL);
+      this.request = request;
       instance = this;
     }
 

@@ -18,6 +18,7 @@ const Pusher = require('./functional-services/Pusher');
 const EvaService = require('./functional-services/EvaService');
 const SlackBot = require('./core-services/SlackBot');
 const DeviceTokenManager = require('./core-services/DeviceTokenManager');
+const RequestCache = require('./providers/RequestCache');
 
 const bot = new SlackBot();
 
@@ -34,6 +35,7 @@ class App {
     this.config = new Config();
     this.pusher = null;
     this.pusherJob = null;
+    this.requestCache = new RequestCache(process.env.TTL);
 
     this.initApp();
     this.expressApp = this.initMiddleware();
@@ -53,11 +55,11 @@ class App {
     process.on('SIGINT', () => process.exit(0));
     process.on('uncaughtException', (err) => {
       console.log(`Unhandled exception: ${err}`);
-      bot.post(`Pius-Gateway crashed with an unhandled exception: ${err}`);
+      bot.post(`Pius-Gateway crashed with an unhandled exception: ${err.stack}`);
       process.exit(-1);
     });
     process.on('unhandledRejection', (reason) => {
-      console.log(`Unhandled promise rejection: ${reason}`);
+      console.log(`Unhandled promise rejection: ${reason.stack}`);
       bot.post(`Pius-Gateway crashed with an unhandled promise rejection: ${reason}`);
       process.exit(-1);
     });
@@ -128,8 +130,8 @@ class App {
       try {
         await f(req, res);
       } catch (err) {
-        console.log(`Function ${f} failed: ${err}`);
-        res.send(503).end();
+        console.log(`Function ${f} failed: ${err.stack}`);
+        res.status(500).end();
       }
     };
   }
@@ -147,7 +149,7 @@ class App {
       },
     }));
 
-    router.get(/^\/v2\/news$/, App.catchify((req, res) => {
+    router.get(/^\/v2\/news$/, this.requestCache.cachedRequest, App.catchify((req, res) => {
       const newsReqHandler = new NewsReqHandlerV2();
       newsReqHandler.getNewsFromHomePage(req, res);
     }));
@@ -171,7 +173,7 @@ class App {
       vertretungsplanHandler.process(req, res);
     }));
 
-    router.get('/calendar', App.catchify((req, res) => {
+    router.get('/calendar', this.requestCache.cachedRequest, App.catchify((req, res) => {
       const calendarHandler = new CalendarHandler();
       calendarHandler.process(req, res);
     }));

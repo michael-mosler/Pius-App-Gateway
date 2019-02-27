@@ -1,9 +1,7 @@
 const Html2Json = require('html2json').html2json;
 const md5 = require('md5');
 const request = require('request');
-const cachedRequest = require('cached-request')(request);
 
-const Config = require('../core-services/Config');
 const calendarURL = 'http://pius-gymnasium.de/internes/a/termine.html';
 
 /**
@@ -61,9 +59,7 @@ class Calendar {
 class CalendarHandler {
   constructor() {
     this.calendar = new Calendar();
-    this.request = cachedRequest;
-    this.request.setCacheDirectory('/tmp');
-    this.request.setValue('ttl', Config.cacheTTL);
+    this.request = request;
   }
 
   /**
