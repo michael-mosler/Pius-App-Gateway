@@ -1,8 +1,13 @@
-const _ = require('underscore');
 const memoryCache = require('memory-cache');
 
 let instance;
 
+/**
+ * Caches Express response result. Put cachedRequest before your standard request handler.
+ * Standard request handler needs to check if res.isCachedRequest is true. In this case
+ * status code 304 must be send with body data. After putting body data into cache
+ * 304 is sent to client.
+ */
 class RequestCache {
   constructor(ttl) {
     if (!instance) {
@@ -27,9 +32,8 @@ class RequestCache {
       // When element is in cache return it immediately.
       if (cacheContent) {
         const { digest: requestDigest } = req.query;
-        const result = _.filter(cacheContent, (obj) => _.some(obj, { _digest: requestDigest }));
 
-        if (process.env.DIGEST_CHECK === 'true' && result.length > 0) {
+        if (process.env.DIGEST_CHECK === 'true' && cacheContent._digest === requestDigest) {
           res.status(304).end();
         } else {
           res.send(cacheContent);
@@ -40,9 +44,21 @@ class RequestCache {
         // Intercept res.send(): Put new data into cache before data is send.
         try {
           res.send_ = res.send;
+          res.isCachedRequest = true;
+
           res.send = (body) => {
-            this.cache.put(key, body, this.ttl);
-            res.send_(body);
+            if (typeof body === 'string') {
+              // If res.send() has transformed JSON to string parse it back to JSON.
+              this.cache.put(key, JSON.parse(body), this.ttl);
+            } else {
+              this.cache.put(key, body, this.ttl);
+            }
+
+            if (res.statusCode === 304) {
+              res.status(304).end();
+            } else {
+              res.send_(body);
+            }
           };
 
           next();

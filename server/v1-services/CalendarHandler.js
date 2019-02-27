@@ -164,14 +164,18 @@ class CalendarHandler {
           const digest = md5(strData);
           json = Html2Json(strData);
           this.transform(json);
+          this.calendar.digest = digest;
 
           // When not modified do not send any data but report "not modified".
           // noinspection JSUnresolvedVariable
           if (process.env.DIGEST_CHECK === 'true' && digest === req.query.digest) {
             // noinspection JSUnresolvedFunction
-            res.status(304).end();
+            if (res.isCachedRequest) {
+              res.status(304).send(this.calendar);
+            } else {
+              res.status(304).end();
+            }
           } else {
-            this.calendar.digest = digest;
             // noinspection JSUnresolvedFunction
             res
               .status(response.statusCode)
