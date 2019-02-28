@@ -62,13 +62,6 @@ class Config {
   static get isoUtcDateTime() {
     return 'YYYY-MM-DD\'T\'HH:MM:ss\'Z\'';
   }
-
-  /**
-   * @returns {String} ISO Date and Time format string.
-   */
-  static get isoDateTime() {
-    return 'yyyy-mm-dd\'T\'HH:MM:ss';
-  }
 }
 
 module.exports = Config;

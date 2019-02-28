@@ -36,17 +36,17 @@ class RequestCache {
         if (process.env.DIGEST_CHECK === 'true' && cacheContent._digest === requestDigest) {
           res.status(304).end();
         } else {
-          res.send(cacheContent);
+          res.status(200).send(cacheContent);
         }
       } else {
         console.log(`Key ${key} not in cache or outdated, will refetch.`);
 
         // Intercept res.send(): Put new data into cache before data is send.
-        try {
-          res.send_ = res.send;
-          res.isCachedRequest = true;
+        res.send_ = res.send;
+        res.isCachedRequest = true;
 
-          res.send = (body) => {
+        res.send = (body) => {
+          try {
             if (typeof body === 'string') {
               // If res.send() has transformed JSON to string parse it back to JSON.
               this.cache.put(key, JSON.parse(body), this.ttl);
@@ -54,20 +54,21 @@ class RequestCache {
               this.cache.put(key, body, this.ttl);
             }
 
-            if (res.statusCode === 304) {
+            const { statusCode = 500 } = res;
+            if (statusCode === 304) {
               res.status(304).end();
+            } else if (body) {
+              res.status(statusCode).send_(body);
             } else {
-              res.send_(body);
+              res.status(statusCode).end();
             }
+          } catch (err) {
+            console.log(`res.send() for cached request failed: ${err.stack}`);
+            res.status(500).end();
           };
+        };
 
-          next();
-        } catch (err) {
-          // Restore original send method on error. Then
-          // re-throw the error.
-          res.send = res.send_;
-          throw err;
-        }
+        next();
       }
     } catch (err) {
       console.log(`Processing cached request failed: ${err}`);
