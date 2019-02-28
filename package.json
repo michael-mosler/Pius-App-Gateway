@@ -17,7 +17,6 @@
     "apn": "^2.2.0",
     "async-retry": "^1.2.3",
     "body-parser": "^1.18.3",
-    "cached-request": "^1.1.4",
     "cheerio": "^1.0.0-rc.2",
     "clone": "^2.1.2",
     "compression": "^1.7.3",
