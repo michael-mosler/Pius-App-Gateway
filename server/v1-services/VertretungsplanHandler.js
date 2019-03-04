@@ -302,7 +302,7 @@ class VertretungsplanHandler {
    */
   process(req, res) {
     // noinspection JSUnresolvedFunction
-    this.request.get(vertretungsplanURL, {
+    this.request.get('http://localhost:8080/not-there', {
       headers: {
         'Authorization': req.header('authorization'),
       },
@@ -310,7 +310,7 @@ class VertretungsplanHandler {
       if (error) {
         console.log(`Failed to load substition schedule: ${error}`);
         res.status(503).end();
-      } if (response.statusCode === 200) {
+      } else if (response.statusCode === 200) {
         try {
           const strData = data.toString();
           const digest = md5(strData);

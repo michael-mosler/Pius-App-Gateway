@@ -49,9 +49,7 @@ class NewsReqHandler {
         this.request({ method: 'get', url: this.config.piusBaseUrl }, (error, response, data) => {
           if (error) {
             reject(new RequestError(`Failed to load news data: ${error}`, 503));
-          }
-
-          if (response.statusCode === 200) {
+          } else if (response.statusCode === 200) {
             resolve(data);
           } else {
             reject(new RequestError('Loading news data returned HTTP status other than 200', response.statusCode));

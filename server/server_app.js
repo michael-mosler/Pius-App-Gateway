@@ -54,7 +54,7 @@ class App {
     process.on('SIGTERM', () => process.exit(0));
     process.on('SIGINT', () => process.exit(0));
     process.on('uncaughtException', (err) => {
-      console.log(`Unhandled exception: ${err}`);
+      console.log(`Unhandled exception: ${err.stack}`);
       bot.post(`Pius-Gateway crashed with an unhandled exception: ${err.stack}`);
       process.exit(-1);
     });
