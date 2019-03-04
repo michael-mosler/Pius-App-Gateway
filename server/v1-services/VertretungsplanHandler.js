@@ -302,7 +302,7 @@ class VertretungsplanHandler {
    */
   process(req, res) {
     // noinspection JSUnresolvedFunction
-    this.request.get('http://localhost:8080/not-there', {
+    this.request.get(vertretungsplanURL, {
       headers: {
         'Authorization': req.header('authorization'),
       },
@@ -362,31 +362,35 @@ class VertretungsplanHandler {
           if (error) {
             console.log(`Failed to load substitution schedule for checker: ${error}`);
           } else if (response.statusCode === 200) {
-            const substitionScheduleHashessDb = new SubstitionScheduleHashessDb();
-            const strData = data.toString();
+            try {
+              const substitionScheduleHashessDb = new SubstitionScheduleHashessDb();
+              const strData = data.toString();
 
-            const json = Html2Json(strData);
-            this.transform(json);
+              const json = Html2Json(strData);
+              this.transform(json);
 
-            const checkList = [];
-            Config.grades.forEach((grade) => {
-              // Clone vertretungsplan as filter() modifies it in place.
-              const filteredVertretungsplan = clone(this.vertretungsplan);
-              filteredVertretungsplan.filter(grade);
+              const checkList = [];
+              Config.grades.forEach((grade) => {
+                // Clone vertretungsplan as filter() modifies it in place.
+                const filteredVertretungsplan = clone(this.vertretungsplan);
+                filteredVertretungsplan.filter(grade);
 
-              // Compute sub-hash for this special schedule and put it on our list.
-              const subHash = md5(JSON.stringify(filteredVertretungsplan));
-              checkList.push({ grade, hash: subHash, substitutionSchedule: filteredVertretungsplan });
-            });
-
-            // Cross check our list and emit push event for all items which have changed.
-            substitionScheduleHashessDb.crossCheck(checkList)
-              .then((changeList) => {
-                changeList.forEach(item => pushEventEmitter.emit('push', item));
-              })
-              .catch((err) => {
-                console.log(`Checker failed with a rejected promise when cross checking: ${err}`);
+                // Compute sub-hash for this special schedule and put it on our list.
+                const subHash = md5(JSON.stringify(filteredVertretungsplan));
+                checkList.push({ grade, hash: subHash, substitutionSchedule: filteredVertretungsplan });
               });
+
+              // Cross check our list and emit push event for all items which have changed.
+              substitionScheduleHashessDb.crossCheck(checkList)
+                .then((changeList) => {
+                  changeList.forEach(item => pushEventEmitter.emit('push', item));
+                })
+                .catch((err) => {
+                  console.log(`Checker failed with a rejected promise when cross checking: ${err}`);
+                });
+            } catch (err) {
+              console.log(`Error when transforming substitution schedule for checker: ${err}`);
+            }
           } else {
             console.log(`Checker failed to get latest data with status ${response.statusCode}\n`);
           }
