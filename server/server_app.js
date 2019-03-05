@@ -35,7 +35,7 @@ class App {
     this.config = new Config();
     this.pusher = null;
     this.pusherJob = null;
-    this.requestCache = new RequestCache(process.env.TTL);
+    this.requestCache = null;
 
     this.initApp();
     this.expressApp = this.initMiddleware();
@@ -63,6 +63,8 @@ class App {
       bot.post(`Pius-Gateway crashed with an unhandled promise rejection: ${reason}`);
       process.exit(-1);
     });
+
+    this.requestCache = new RequestCache(process.env.TTL);
 
     // Initialise pusher.
     this.pusher = new Pusher();
@@ -124,6 +126,8 @@ class App {
    * send HTTP status 503.
    * @param {Function} f A function that takes Express (req, res) as input, can be async.
    * @returns {Function} Catchified function.
+   * @static
+   * @private
    */
   static catchify(f) {
     return async (req, res) => {
@@ -138,6 +142,7 @@ class App {
 
   /**
    * Initialise Express routing.
+   * @returns {Router}
    * @private
    */
   initRouting() {

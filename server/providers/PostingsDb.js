@@ -13,7 +13,7 @@ class PostingsDb extends CloudantDb {
   /**
    * Gets all active postings for a given date.
    * @param {Date} forDate - Get all postings that are active for this date.
-   * @returns {Promise<[Object]|Error>} Resolves to a list of documents with timestamp and message property.
+   * @returns {Promise<Object|Error>} Resolves to a list of documents with timestamp and message property.
    */
   async getPostings({ forDate }) {
     const filterDate = datetime.format(forDate, 'YYYY-MM-DDTHH:mm:SS');
