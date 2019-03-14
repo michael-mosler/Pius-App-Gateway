@@ -139,7 +139,7 @@ class EvaDoc {
     } else {
       let newEvaCollection = this.evaCollection;
       newEvaCollection.splice(index, 0, newEvaCollectionItem);
-      newEvaCollection = newEvaCollection.slice(0, 10);
+      newEvaCollection = newEvaCollection.slice(-10);
       this.evaCollection = newEvaCollection;
     }
 
