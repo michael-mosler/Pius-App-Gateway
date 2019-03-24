@@ -1,6 +1,5 @@
 const md5 = require('md5');
 const datetime = require('date-and-time');
-const Config = require('../core-services/Config');
 const PostingsDb = require('../providers/PostingsDb');
 const SubstitutionScheduleHashesDb = require('../providers/SubstitutionScheduleHashesDb');
 const HtmlHelper = require('../helper/HtmlHelper');
@@ -27,7 +26,7 @@ class PostingsHandler {
       const { substitutionSchedule: { _additionalText: additionalText } = { _additionalText: '' } } = substitutionSchedule5A;
 
       if (additionalText.length > 0) {
-        const timestamp = datetime.format(new Date(substitutionSchedule5A.timestamp), Config.isoUtcDateTime, true);
+        const timestamp = `${datetime.format(new Date(substitutionSchedule5A.timestamp), 'YYYY-MM-DDTHH:mm:ss', true)}Z`;
 
         const additionalMessage = { timestamp, message: HtmlHelper.fontify(additionalText) };
         messages.unshift(additionalMessage);

@@ -53,14 +53,14 @@ class App {
   initApp() {
     process.on('SIGTERM', () => process.exit(0));
     process.on('SIGINT', () => process.exit(0));
-    process.on('uncaughtException', (err) => {
+    process.on('uncaughtException', async (err) => {
       console.log(`Unhandled exception: ${err.stack}`);
-      bot.post(`Pius-Gateway crashed with an unhandled exception: ${err.stack}`);
+      await bot.post(`Pius-Gateway crashed with an unhandled exception: ${err.stack}`);
       process.exit(-1);
     });
-    process.on('unhandledRejection', (reason) => {
+    process.on('unhandledRejection', async (reason) => {
       console.log(`Unhandled promise rejection: ${reason.stack}`);
-      bot.post(`Pius-Gateway crashed with an unhandled promise rejection: ${reason}`);
+      await bot.post(`Pius-Gateway crashed with an unhandled promise rejection: ${reason.stack || reason}`);
       process.exit(-1);
     });
 
@@ -183,7 +183,7 @@ class App {
       calendarHandler.process(req, res);
     }));
 
-    router.get('/validateLogin', App.catchify((req, res) => {
+    router.head('/validateLogin', App.catchify((req, res) => {
       const vertretungsplanHandler = new VertretungsplanHandler();
       vertretungsplanHandler.validateLogin(req, res);
     }));
