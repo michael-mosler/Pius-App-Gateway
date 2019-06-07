@@ -17,13 +17,12 @@ class DeviceTokemManager {
       return;
     }
 
-    const deviceToken = req.body.deviceToken;
-    const grade = req.body.grade;
-    const courseList = req.body.courseList;
-    console.log(`Updating device token ${deviceToken} with grade ${grade} and course list ${courseList}`);
+    const { deviceToken, grade, courseList, messagingProvider = 'apn' } = req.body;
+
+    console.log(`Updating device token ${deviceToken} for messaging provider ${messagingProvider} with grade ${grade} and course list ${courseList}`);
 
     this.deviceTokensDb.get(deviceToken)
-      .then(document => Object.assign(document, { _id: deviceToken, grade, courseList }))
+      .then(document => Object.assign(document, { _id: deviceToken, grade, courseList, messagingProvider }))
       .then(newDocument => this.deviceTokensDb.insertDocument(newDocument))
       .then(() => res.status(200).end())
       .catch((err) => {

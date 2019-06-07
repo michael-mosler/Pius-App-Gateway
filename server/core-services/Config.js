@@ -53,6 +53,7 @@ class Config {
   }
 
   static get apiKey() {
+    // TODO: Move key to VCAP_SERVICES.
     return 'heSXxSOvNcl8J4UB9$#TV9TUZ3zClbX$EyOQzKiqGWxRgonzSe';
   }
 }
