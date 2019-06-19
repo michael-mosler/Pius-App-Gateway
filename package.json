@@ -13,7 +13,7 @@
   "author": "Michael Mosler-Krings, Felix Krings",
   "license": "MIT",
   "dependencies": {
-    "@cloudant/cloudant": "^4.1.0",
+    "@cloudant/cloudant": "^4.1.1",
     "apn": "^2.2.0",
     "async-retry": "^1.2.3",
     "body-parser": "^1.19.0",
@@ -25,6 +25,7 @@
     "date-and-time": "^0.7.0",
     "express": "^4.17.1",
     "express-http-proxy": "^1.5.1",
+    "firebase-admin": "^8.1.0",
     "helmet": "^3.18.0",
     "html2json": "^1.0.2",
     "md5": "^2.2.1",
@@ -53,6 +54,6 @@
     "jsdoc": "^3.6.2",
     "mocha": "^6.1.4",
     "nyc": "^14.1.1",
-    "testdouble": "^3.11.0"
+    "testdouble": "^3.12.0"
   }
 }
