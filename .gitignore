@@ -1,6 +1,7 @@
 .DS_store
 .idea
 apn-credentials.json
+fcm-credentials.json
 pius-vertretungsplan-credentials.json
 slack-token.json
 doc

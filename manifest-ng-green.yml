@@ -9,6 +9,7 @@ applications:
   services:
   - Cloudant
   - apns
+  - fcm
   - pius-vertretungsplan-service
   - slack
   env:
@@ -19,4 +20,4 @@ applications:
     COMPRESSION: true
     DIGEST_CHECK: true
     SLACK_ENABLED: true
-  stack: cflinuxfs2
+  stack: cflinuxfs3
