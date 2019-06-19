@@ -201,7 +201,7 @@ class Pusher {
               const deltaList = VertretungsplanHelper.delta(changeListItem, device.courseList || []);
               const pushItem = new PushItem(changeListItem.grade, deltaList);
               pushItem.add(new Device(device._id, device._rev, device.messagingProvider));
-              this.sendApnPushNotification(pushItem);
+              this.sendApnPushNotification(pushItem.for('apn'));
               this.sendFcmPushNotification(pushItem.for('fcm'));
             });
           } else {
