@@ -17,7 +17,21 @@ class DeviceTokemManager {
       return;
     }
 
-    const { deviceToken, grade, courseList, messagingProvider = 'apn' } = req.body;
+    const { deviceToken, grade, courseList: _courseList = [], messagingProvider = 'apn' } = req.body;
+
+    // Workaround for JSON creation error on Android. courseList is not sent as JSON array
+    // but as string.
+    let courseList;
+    if (messagingProvider === 'fcm' && !Array.isArray(_courseList)) {
+      courseList = [];
+      _courseList
+        .replace('[', '')
+        .replace(']', '')
+        .split(',')
+        .forEach(item => courseList.push(item.trim()));
+    } else {
+      courseList = _courseList;
+    }
 
     console.log(`Updating device token ${deviceToken} for messaging provider ${messagingProvider} with grade ${grade} and course list ${courseList}`);
 
