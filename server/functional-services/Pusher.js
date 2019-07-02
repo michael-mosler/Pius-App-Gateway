@@ -230,6 +230,8 @@ class Pusher {
     console.log(`APNS: ...${util.inspect(pushItem.devices, { depth: 2 })}`);
     console.log(`APNS: ${util.inspect(pushItem.deltaList, { depth: 4 })}`);
 
+    const now = `${datetime.format(new Date(), 'YYYY-MM-DDTHH:mm:ss', true)}Z`;
+
     if (pushItem.devices.length > 0 && pushItem.deltaList.length > 0) {
       this.pendingApnNotifications += 1;
       try {
@@ -248,7 +250,7 @@ class Pusher {
         notification.topic = 'de.rmkrings.piusapp';
         notification.sound = 'default';
         notification.body = `Es gibt ${pushItem.deltaList.length} Änderung${(pushItem.deltaList.length > 1) ? 'en' : ''} an Deinem Vertretungsplan.`;
-        notification.payload = { deltaList: pushItem.deltaList };
+        notification.payload = { deltaList: pushItem.deltaList, timestamp: now };
 
         try {
           const result = await this.apnProvider.send(notification, pushItem.deviceTokens);
