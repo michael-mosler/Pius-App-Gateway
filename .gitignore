@@ -3,6 +3,7 @@
 apn-credentials.json
 fcm-credentials.json
 pius-vertretungsplan-credentials.json
+service-cedentials.json
 slack-token.json
 doc
 node_modules

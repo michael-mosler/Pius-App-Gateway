@@ -3,6 +3,10 @@ let instance;
 /**
  * Configuration properties.
  * @property {Number} cacheTTL - Cache TTL, defaults to 15 minutes when env. variable TTL unset.
+ * @property {String[]} grades - List of grades known to the app.
+ * @property {String[]} upperGrades - List of upper grades.
+ * @property {Map} upsMap - User-provided-services credentials map.
+ * @property {String} apiKey - SHA1 hash value of API key.
  */
 class Config {
   constructor() {
@@ -53,8 +57,14 @@ class Config {
   }
 
   static get apiKey() {
-    // TODO: Move key to VCAP_SERVICES.
-    return 'heSXxSOvNcl8J4UB9$#TV9TUZ3zClbX$EyOQzKiqGWxRgonzSe';
+    const { apikey } = Config.upsMap.get('self');
+    return apikey;
+    // return 'heSXxSOvNcl8J4UB9$#TV9TUZ3zClbX$EyOQzKiqGWxRgonzSe';
+  }
+
+  static get monitorCredentials() {
+    const { monitor } = Config.upsMap.get('self');
+    return monitor;
   }
 }
 

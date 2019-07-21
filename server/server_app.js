@@ -6,6 +6,9 @@ const Express = require('express');
 const Proxy = require('express-http-proxy');
 const Cron = require('cron');
 const url = require('url');
+const sha1 = require('sha1');
+const auth = require('http-auth');
+const expressStatusMonitor = require('express-status-monitor');
 
 const Config = require('./core-services/Config');
 const PostingsHandler = require('./v2-services/PostingsHandler');
@@ -95,6 +98,15 @@ class App {
    */
   initMiddleware() {
     const expressApp = Express();
+
+    const basic = auth.basic({ realm: 'Monitor Area' }, (user, password, cb) => {
+      // eslint-disable-next-line standard/no-callback-literal
+      cb(user === Config.monitorCredentials.user && sha1(password) === Config.monitorCredentials.password);
+    });
+
+    const statusMonitor = expressStatusMonitor({ path: '' });
+    expressApp.use(statusMonitor.middleware);
+    expressApp.get('/status', auth.connect(basic), statusMonitor.pageRoute);
 
     if (process.env.DIGEST_CHECK === 'true') {
       bot.post('Digest check is enabled.');
@@ -209,7 +221,7 @@ class App {
     }));
 
     router.post('/startPusher', (req, res) => {
-      if (req.body.apiKey !== Config.apiKey) {
+      if (sha1(req.body.apiKey) !== Config.apiKey) {
         res.status(401).end();
       } else if (this.pusherJob) {
         this.pusherJob.start();
@@ -221,7 +233,7 @@ class App {
     });
 
     router.delete('/startPusher', (req, res) => {
-      if (req.body.apiKey !== Config.apiKey) {
+      if (sha1(req.body.apiKey) !== Config.apiKey) {
         res.status(401).end();
       } else if (this.pusherJob) {
         console.log('Stopping pusher...');
