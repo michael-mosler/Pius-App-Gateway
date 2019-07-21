@@ -19,5 +19,6 @@ applications:
   - apns
   - fcm
   - pius-vertretungsplan-service
+  - self
   - slack
   stack: cflinuxfs3
