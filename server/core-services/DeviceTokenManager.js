@@ -1,4 +1,5 @@
 const CloudantDb = require('./CloudantDb');
+const sha1 = require('sha1');
 const Config = require('./Config');
 
 class DeviceTokemManager {
@@ -12,7 +13,7 @@ class DeviceTokemManager {
    * @param {ServerResponse} res
    */
   registerDeviceToken(req, res) {
-    if (req.body.apiKey !== Config.apiKey) {
+    if (sha1(req.body.apiKey) !== Config.apiKey) {
       res.status(401).end();
       return;
     }

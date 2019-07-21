@@ -6,7 +6,7 @@ applications:
     APN_PRODUCTION: false
     BASE_URL: https://pius-gateway-ng.eu-gb.mybluemix.net
     NODE_ENV: dev
-    START_PUSHER: true
+    START_PUSHER: false
     COMPRESSION: true
     DIGEST_CHECK: true
     SLACK_ENABLED: false
