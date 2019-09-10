@@ -76,7 +76,8 @@ class VertretungsplanHelper {
     const normalizedCourseList = courseList.map(course => course
       .replace(/ +/g, '')
       .replace('GK', 'G')
-      .replace('LK', 'L'));
+      .replace('LK', 'L')
+      .replace('ZK', 'Z'));
 
     const filteredVertretungsplanItems = vertretungsplanItems.filter((item) => {
       let currentCourse = item.detailItems[2].replace(/ +/g, '');
