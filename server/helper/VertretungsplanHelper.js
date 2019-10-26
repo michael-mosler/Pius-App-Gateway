@@ -205,7 +205,7 @@ class VertretungsplanHelper {
         }
 
         // Which lessons are in new list but not in old list? These have been added.
-        let newVertretungsplanItemsNew = [];
+        const newVertretungsplanItemsNew = [];
         gradeItemsNew[0].vertretungsplanItems.forEach((newItem) => {
           const index = gradeItemsOld[0].vertretungsplanItems.findIndex(oldItem => VertretungsplanHelper.sameLesson(oldItem.detailItems, newItem.detailItems));
           if (index === -1) {
@@ -218,7 +218,7 @@ class VertretungsplanHelper {
         gradeItemsNew[0].vertretungsplanItems = newVertretungsplanItemsNew;
 
         // Which lessons are in old list but not in new? These have been deleted.
-        let newVertretungsplanItemsOld = [];
+        const newVertretungsplanItemsOld = [];
         gradeItemsOld[0].vertretungsplanItems.forEach((oldItem) => {
           const index = gradeItemsNew[0].vertretungsplanItems.findIndex(newItem => VertretungsplanHelper.sameLesson(newItem.detailItems, oldItem.detailItems));
           if (index === -1) {
@@ -262,7 +262,7 @@ class VertretungsplanHelper {
     const options = {
       url: 'http://pius-gymnasium.de/vertretungsplan/',
       headers: {
-        'Authorization': req.header('authorization'),
+        Authorization: req.header('authorization'),
       },
     };
 
