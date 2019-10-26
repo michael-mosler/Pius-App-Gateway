@@ -8,7 +8,7 @@
   },
   "engines": {
     "node": "10.x.x",
-    "npm": "8.x.x"
+    "npm": "6.x.x"
   },
   "author": "Michael Mosler-Krings, Felix Krings",
   "license": "MIT",
