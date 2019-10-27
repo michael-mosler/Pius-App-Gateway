@@ -27,7 +27,7 @@ class SubstitutionScheduleHashesDb extends CloudantDb {
 
           // Add old schedule to change list. This is needed as we want to compute actual delta in Pusher.
           // The reason why actual delta is not computed here is that this delta is device dependent and
-          // for upper grades a course list. Here we just checkt that something has changed.
+          // for upper grades a course list is also needed. Here we just checkt that something has changed.
           const newChangeList = changeList.map(item => Object.assign(item, { oldSubstitutionSchedule: (hashMap.get(item.grade) || { }).substitutionSchedule }));
 
           // When done resolve.

@@ -304,7 +304,7 @@ class VertretungsplanHandler {
     // noinspection JSUnresolvedFunction
     this.request.get(vertretungsplanURL, {
       headers: {
-        'Authorization': req.header('authorization'),
+        Authorization: req.header('authorization'),
       },
     }, (error, response, data) => {
       if (error) {
@@ -356,7 +356,7 @@ class VertretungsplanHandler {
       .then((authInfo) => {
         this.request.get(vertretungsplanURL, {
           headers: {
-            'Authorization': `Basic ${authInfo}`,
+            Authorization: `Basic ${authInfo}`,
           },
         }, (error, response, data) => {
           if (error) {
