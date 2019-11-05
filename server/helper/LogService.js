@@ -21,7 +21,7 @@ class LogService {
       const consoleLogLevel = process.env.CONSOLE_LOG_LEVEL || 'info';
       const fileLogLevel = process.env.FILE_LOG_LEVEL || 'error';
 
-      if (process.env.NODE_ENV !== 'production') {
+      if (process.env.NODE_ENV === 'production') {
         transports = [
           new winston.transports.Console({
             level: consoleLogLevel,
