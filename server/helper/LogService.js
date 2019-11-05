@@ -1,5 +1,5 @@
 const winston = require('winston');
-const { combine, timestamp, colorize, align, printf, cli } = winston.format;
+const { combine, timestamp, colorize, align, printf } = winston.format;
 
 let self;
 
@@ -25,7 +25,9 @@ class LogService {
         transports = [
           new winston.transports.Console({
             level: consoleLogLevel,
-            format: cli(),
+            format: combine(
+              printf(info => `${info.level}: ${info.message}`),
+            ),
           }),
           new winston.transports.File({
             level: fileLogLevel,
