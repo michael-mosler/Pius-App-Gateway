@@ -1,6 +1,8 @@
 const cloudant = require('@cloudant/cloudant');
 const VError = require('verror');
 
+const LogService = require('../helper/LogService');
+
 /**
  * Cloudant  connection class. This class knows how to establish a physical connection to Cloudant.
  * Connection is not established on instantiation. You have to call connect() method to establish
@@ -12,6 +14,7 @@ const VError = require('verror');
  */
 class CloudantConnection {
   constructor() {
+    this.logService = new LogService();
     this.instanceName = 'Cloudant';
     this.instanceOffering = 'Lite';
   }
@@ -43,7 +46,7 @@ class CloudantConnection {
         },
       }, 'Failed to connect to CloudantDB');
 
-      console.log(`${verror}\n`);
+      this.logService.logger.error(`${verror}\n`);
       throw verror;
     }
   }

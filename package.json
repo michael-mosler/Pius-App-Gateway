@@ -14,8 +14,8 @@
   "license": "MIT",
   "dependencies": {
     "@cloudant/cloudant": "^4.2.2",
-    "@firebase/app": "^0.4.21",
-    "@firebase/app-types": "^0.4.6",
+    "@firebase/app": "^0.4.22",
+    "@firebase/app-types": "^0.4.7",
     "apn": "^2.2.0",
     "async-retry": "^1.2.3",
     "body-parser": "^1.19.0",
@@ -27,8 +27,8 @@
     "date-and-time": "^0.10.0",
     "express": "^4.17.1",
     "express-http-proxy": "^1.6.0",
-    "express-status-monitor": "^1.2.7",
-    "firebase-admin": "^8.6.1",
+    "express-status-monitor": "^1.2.6",
+    "firebase-admin": "^8.7.0",
     "helmet": "^3.21.2",
     "html2json": "^1.0.2",
     "http-auth": "^3.2.4",
@@ -40,7 +40,8 @@
     "underscore": "^1.9.1",
     "url-parse": "^1.4.7",
     "uuid": "^3.3.3",
-    "verror": "^1.10.0"
+    "verror": "^1.10.0",
+    "winston": "^3.2.1"
   },
   "scripts": {
     "start": "node server/server_app.js",
@@ -50,7 +51,7 @@
     "eslint": "^6.6.0",
     "eslint-config-standard": "^14.1.0",
     "eslint-plugin-import": "^2.18.2",
-    "eslint-plugin-mocha": "^6.2.0",
+    "eslint-plugin-mocha": "^6.2.1",
     "eslint-plugin-node": "^10.0.0",
     "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-standard": "^4.0.1",

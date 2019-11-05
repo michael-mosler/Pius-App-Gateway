@@ -1,7 +1,7 @@
 applications:
 - name: pius-gateway-ng-blue
   instances: 1
-  memory: 256M
+  memory: 192M
   disk_quota: 1024M
   routes:
   - route: pius-gateway-ng-blue.eu-de.mybluemix.net

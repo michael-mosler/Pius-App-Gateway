@@ -3,7 +3,7 @@ const request = require('request');
 const Html2Json = require('html2json').html2json;
 const md5 = require('md5');
 const clone = require('clone');
-
+const LogService = require('../helper/LogService');
 const VertretungsplanHelper = require('../helper/VertretungsplanHelper');
 const PushEventEmitter = require('../functional-services/PushEventEmitter');
 const Config = require('../core-services/Config');
@@ -164,6 +164,7 @@ class VertretungsplanHandler {
    * @param {String} [version='v1'] - Requested version
    */
   constructor(version = 'v1') {
+    this.logService = new LogService();
     this.request = request;
     this.version = version;
     this.vertretungsplan = new Vertretungsplan();
@@ -278,7 +279,6 @@ class VertretungsplanHandler {
         // we need to add it as blank array item.
         const { currentDateItem: { currentGradeItem: { currentVertretungsplanItem } = {} } = {} } = this.vertretungsplan;
         if (index > -1 && currentVertretungsplanItem && currentVertretungsplanItem.hasNewDetailItemFormat) {
-          // console.log(currentVertretungsplanItem.detailItems.length);
           currentVertretungsplanItem.detailItems.splice(5, 0, ' ');
         }
         // ****************************************************************************************************
@@ -308,7 +308,7 @@ class VertretungsplanHandler {
       },
     }, (error, response, data) => {
       if (error) {
-        console.log(`Failed to load substition schedule: ${error}`);
+        this.logService.logger.error(`Failed to load substition schedule: ${error}`);
         res.status(503).end();
       } else if (response.statusCode === 200) {
         try {
@@ -331,7 +331,7 @@ class VertretungsplanHandler {
               .send(this.vertretungsplan);
           }
         } catch (err) {
-          console.log(`Error when transforming substitution schedule: ${err}`);
+          this.logService.logger.error(`Error when transforming substitution schedule: ${err}`);
           res.status(500).end();
         }
       } else {
@@ -348,7 +348,7 @@ class VertretungsplanHandler {
    * hash that apps should have locally to be to date.
    */
   checker() {
-    console.log('##### Checking for new changes to push...');
+    this.logService.logger.info('##### Checking for new changes to push...');
     const pushEventEmitter = new PushEventEmitter();
     const basicAuthProvider = new BasicAuthProvider();
 
@@ -360,7 +360,7 @@ class VertretungsplanHandler {
           },
         }, (error, response, data) => {
           if (error) {
-            console.log(`Failed to load substitution schedule for checker: ${error}`);
+            this.logService.logger.error(`Failed to load substitution schedule for checker: ${error}`);
           } else if (response.statusCode === 200) {
             try {
               const substitionScheduleHashessDb = new SubstitionScheduleHashessDb();
@@ -386,21 +386,21 @@ class VertretungsplanHandler {
                   changeList.forEach(item => pushEventEmitter.emit('push', item));
                 })
                 .catch((err) => {
-                  console.log(`Checker failed with a rejected promise when cross checking: ${err}`);
+                  this.logService.logger.error(`Checker failed with a rejected promise when cross checking: ${err}`);
                 });
             } catch (err) {
-              console.log(`Error when transforming substitution schedule for checker: ${err}`);
+              this.logService.logger.error(`Error when transforming substitution schedule for checker: ${err}`);
             }
           } else {
-            console.log(`Checker failed to get latest data with status ${response.statusCode}\n`);
+            this.logService.logger.error(`Checker failed to get latest data with status ${response.statusCode}\n`);
           }
         });
       })
       .catch((err) => {
-        console.log(`Check failed with a rejected promise: ${err}\n`);
+        this.logService.logger.error(`Check failed with a rejected promise: ${err}\n`);
       });
 
-    console.log('##### Checking for new changes to push... DONE');
+    this.logService.logger.info('##### Checking for new changes to push... DONE');
   }
 
   /**
@@ -415,7 +415,7 @@ class VertretungsplanHandler {
       const statusCode = await VertretungsplanHelper.validateLogin(req);
       res.status(statusCode).end();
     } catch (err) {
-      console.log(`VertretungsplanHandler could not validate login: ${err}`);
+      this.logService.logger.warn(`VertretungsplanHandler could not validate login: ${err}`);
       res.status(503).end();
     }
   }

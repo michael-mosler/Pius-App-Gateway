@@ -1,4 +1,5 @@
 const Slack = require('slack');
+const LogService = require('../helper/LogService');
 const Config = require('./Config');
 
 let instance;
@@ -10,6 +11,7 @@ let instance;
 class SlackBot {
   constructor() {
     if (!instance) {
+      this.logService = new LogService();
       this.token = Config.upsMap.get('slack').token;
       this.bot = new Slack();
       instance = this;
@@ -33,7 +35,7 @@ class SlackBot {
         });
       }
     } catch (err) {
-      console.log(`Posting to slack has failed: ${err}`);
+      this.logService.logger.error(`Posting to slack has failed: ${err}`);
     }
   }
 }

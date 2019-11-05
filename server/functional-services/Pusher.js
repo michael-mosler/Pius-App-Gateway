@@ -4,6 +4,7 @@ const APN = require('apn');
 const firebase = require('firebase-admin');
 const clone = require('clone');
 const datetime = require('date-and-time');
+const LogService = require('../helper/LogService');
 const Config = require('../core-services/Config');
 const PushEventEmitter = require('./PushEventEmitter');
 const DeviceTokenManager = require('../core-services/DeviceTokenManager');
@@ -117,6 +118,7 @@ class PushItem {
 class Pusher {
   constructor() {
     if (!instance) {
+      this.logService = new LogService();
       this.deviceTokenManager = new DeviceTokenManager();
       this.apnProvider = null;
       this.apnConnShutdownTimer = null;
@@ -155,7 +157,7 @@ class Pusher {
     if (this.pendingApnNotifications === 0 && this.apnProvider) {
       this.apnProvider.shutdown();
       this.apnProvider = null;
-      console.log('APNS: No pending notification left, will shut down connection');
+      this.logService.logger.info('APNS: No pending notification left, will shut down connection');
     }
 
     this.apnConnShutdownTimer = null;
@@ -169,11 +171,11 @@ class Pusher {
    */
   scheduleApnConnectionShutdown() {
     if (this.pendingApnNotifications === 0 && this.apnProvider) {
-      console.log('APNS: Schedule shutdown of APN connection.');
+      this.logService.logger.debug('APNS: Schedule shutdown of APN connection.');
 
       // If there is a timer already, cancel it first.
       if (this.apnConnShutdownTimer) {
-        console.log('APNS: Will cancel existing timer before scheduling shutdown...');
+        this.logService.logger.debug('APNS: Will cancel existing timer before scheduling shutdown...');
         clearTimeout(this.apnConnShutdownTimer);
       }
       // Schedule connection shutdown with a delay of 10s.
@@ -187,7 +189,7 @@ class Pusher {
    * @param {Object} changeListItem - Item with information on current change
    */
   push(changeListItem) {
-    console.log(`Pushing for ${changeListItem.grade}`);
+    this.logService.logger.info(`Pushing for ${changeListItem.grade}`);
 
     this.deviceTokenManager.getDeviceTokens(changeListItem.grade)
       .then((device) => {
@@ -214,7 +216,7 @@ class Pusher {
         }
       })
       .catch((err) => {
-        console.log(`Processing push notification failed with rejected promise: ${err} at ${err.stack}`);
+        this.logService.logger.error(`Processing push notification failed with rejected promise: ${err} at ${err.stack}`);
       });
   }
 
@@ -226,9 +228,9 @@ class Pusher {
    * @private
    */
   async sendApnPushNotification(pushItem) {
-    console.log(`APNS: sendPushNotification(): ${pushItem.deltaList.length}`);
-    console.log(`APNS: ...${util.inspect(pushItem.devices, { depth: 2 })}`);
-    console.log(`APNS: ${util.inspect(pushItem.deltaList, { depth: 4 })}`);
+    this.logService.logger.debug(`APNS: sendPushNotification(): ${pushItem.deltaList.length}`);
+    this.logService.logger.debug(`APNS: ...${util.inspect(pushItem.devices, { depth: 2 })}`);
+    this.logService.logger.debug(`APNS: ${util.inspect(pushItem.deltaList, { depth: 4 })}`);
 
     const now = `${datetime.format(new Date(), 'YYYY-MM-DDTHH:mm:ss', true)}Z`;
 
@@ -238,10 +240,10 @@ class Pusher {
         // Connect to APN service if not done so already.
         if (!this.apnProvider) {
           this.apnProvider = new APN.Provider(this.apnOptions);
-          console.log('APNS: Got connection');
+          this.logService.logger.debug('APNS: Got connection');
         }
 
-        console.log(`APNS: # of pending notifications is ${this.pendingApnNotifications}`);
+        this.logService.logger.debug(`APNS: # of pending notifications is ${this.pendingApnNotifications}`);
 
         // This is our push notification.
         const notification = new APN.Notification();
@@ -254,7 +256,7 @@ class Pusher {
 
         try {
           const result = await this.apnProvider.send(notification, pushItem.deviceTokens);
-          console.log(`APNS: ${util.inspect(result, { depth: 4 })}`);
+          this.logService.logger.debug(`APNS: ${util.inspect(result, { depth: 4 })}`);
 
           const failedList = result.failed
             .filter(item => item.response)
@@ -264,12 +266,12 @@ class Pusher {
           this.pendingApnNotifications -= 1;
           this.scheduleApnConnectionShutdown();
         } catch (err) {
-          console.log(`APNS: Sending failed with exception promise: ${err}`);
+          this.logService.logger.error(`APNS: Sending failed with exception promise: ${err}`);
           this.pendingApnNotifications -= 1;
           this.scheduleApnConnectionShutdown();
         };
       } catch (err) {
-        console.log(`APNS: Problem when sending push notficication for grade ${pushItem.grade}: ${err}`);
+        this.logService.logger.error(`APNS: Problem when sending push notficication for grade ${pushItem.grade}: ${err}`);
       }
     }
   }
@@ -294,9 +296,9 @@ class Pusher {
    * @private
    */
   async sendFcmPushNotification(pushItem) {
-    console.log(`FCM: sendPushNotification(): ${pushItem.deltaList.length}`);
-    console.log(`FCM: ... ${util.inspect(pushItem.devices, { depth: 2 })}`);
-    console.log(`FCM: ${util.inspect(pushItem.deltaList, { depth: 4 })}`);
+    this.logService.logger.debug(`FCM: sendPushNotification(): ${pushItem.deltaList.length}`);
+    this.logService.logger.debug(`FCM: ... ${util.inspect(pushItem.devices, { depth: 2 })}`);
+    this.logService.logger.debug(`FCM: ${util.inspect(pushItem.deltaList, { depth: 4 })}`);
 
     const now = `${datetime.format(new Date(), 'YYYY-MM-DDTHH:mm:ss', true)}Z`;
 
@@ -323,7 +325,7 @@ class Pusher {
           };
 
           const response = await firebase.messaging().sendMulticast(message);
-          console.log(`FCM: ${util.inspect(response, { depth: 6 })}`);
+          this.logService.logger.debug(`FCM: ${util.inspect(response, { depth: 6 })}`);
 
           if (response.failureCount > 0) {
             const failedList = [];
@@ -336,7 +338,7 @@ class Pusher {
             await this.deviceTokenManager.housekeeping(failedList);
           }
         } catch (err) {
-          console.log(`FCM: Problem when sending push notficication for grade ${pushItem.grade}: ${err}`);
+          this.logService.logger.error(`FCM: Problem when sending push notficication for grade ${pushItem.grade}: ${err}`);
         }
       });
     }

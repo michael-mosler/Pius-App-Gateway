@@ -1,8 +1,10 @@
+const LogService = require('../helper/LogService');
 const CloudantDb = require('../core-services/CloudantDb');
 
 class SubstitutionScheduleHashesDb extends CloudantDb {
   constructor() {
     super('substitution-schedule-hashes', true);
+    this.logService = new LogService();
   }
 
   crossCheck(checkList) {
@@ -34,12 +36,12 @@ class SubstitutionScheduleHashesDb extends CloudantDb {
           Promise.all(promises)
             .then(() => resolve(newChangeList))
             .catch((err) => {
-              console.log(`Problem when updating substitution schedule hashes: ${err}`);
+              this.logService.logger.error(`Problem when updating substitution schedule hashes: ${err}`);
               resolve(newChangeList);
             });
         })
         .catch((err) => {
-          console.log(`Substitution schedule hashes crosscheck failed with promise rejection: ${err}\n`);
+          this.logService.logger.error(`Substitution schedule hashes crosscheck failed with promise rejection: ${err}\n`);
           reject(err);
         });
     });

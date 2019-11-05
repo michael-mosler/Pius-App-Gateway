@@ -2,6 +2,7 @@ const Cheerio = require('cheerio');
 const UrlParse = require('url-parse');
 const md5 = require('md5');
 const request = require('request');
+const LogService = require('../helper/LogService');
 const Config = require('../core-services/Config');
 
 let instance;
@@ -29,6 +30,7 @@ class RequestError extends Error {
 class NewsReqHandler {
   constructor() {
     if (!instance) {
+      this.logService = new LogService();
       this.config = new Config();
       this.request = request;
       instance = this;
@@ -36,6 +38,7 @@ class NewsReqHandler {
 
     return instance;
   }
+
   /**
    * Load Pius Gymnasium Homepage and resolve promise with HTML document
    * in case of success. In case of error rejects promise with HTTP status
@@ -84,7 +87,7 @@ class NewsReqHandler {
         const heading = $('.uber-grid-label-heading', $(this)).text();
 
         if (text.length > 159) {
-          let i = 159;
+          const i = 159;
 
           // Backward search next non-alphanum character.
           let h;
@@ -121,7 +124,7 @@ class NewsReqHandler {
         res.status(200).send({ newsItems, _digest: digest });
       }
     } catch (error) {
-      console.log(`Loading news data failed: ${error}`);
+      this.logService.logger.error(`Loading news data failed: ${error}`);
       res.status(error.statusCode).end();
     }
   }

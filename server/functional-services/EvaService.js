@@ -1,6 +1,7 @@
 const util = require('util');
 const md5 = require('md5');
 const _ = require('underscore');
+const LogService = require('../helper/LogService');
 const { EvaItem, EvaCollectionItem, EvaDoc } = require('../data-objects/EvaServiceData');
 const CloudantDb = require('../core-services/CloudantDb');
 const PushEventEmitter = require('./PushEventEmitter');
@@ -23,6 +24,7 @@ let instance;
 class EvaService {
   constructor() {
     if (!instance) {
+      this.logService = new LogService();
       this.evaDb = new CloudantDb('eva');
       this.pushEventEmitter = new PushEventEmitter();
       this.pushEventEmitter.on('push', changeListItem => this.updateFrom(changeListItem));
@@ -46,7 +48,7 @@ class EvaService {
     }
 
     try {
-      console.log(`Updating EVA for ${changeListItem.grade}`);
+      this.logService.logger.info(`Updating EVA for ${changeListItem.grade}`);
 
       const doc = await this.evaDb.get(changeListItem.grade);
       let evaDoc = new EvaDoc(_.extend(doc, { _id: changeListItem.grade }));
@@ -66,7 +68,7 @@ class EvaService {
             .filter(vertretungsplanItem => vertretungsplanItem.detailItems[7] !== undefined)
             .map(vertretungsplanItem => new EvaItem(vertretungsplanItem.detailItems[2], vertretungsplanItem.detailItems[7]));
 
-          console.log(`Merging items for ${grade}, ${date}: ${util.inspect(evaItems, { depth: 2 })}`);
+          this.logService.logger.debug(`Merging items for ${grade}, ${date}: ${util.inspect(evaItems, { depth: 2 })}`);
 
           // When new items are not contained in doc merge them.
           const newEvaCollectionItem = new EvaCollectionItem(date, evaItems);
@@ -77,20 +79,16 @@ class EvaService {
       });
 
       const newHash = md5(JSON.stringify(evaDoc.evaCollection));
-      console.log(`EVA doc ${changeListItem.grade} hash: new = ${newHash}, old = ${evaDoc.hash}`);
+      this.logService.logger.debug(`EVA doc ${changeListItem.grade} hash: new = ${newHash}, old = ${evaDoc.hash}`);
       // if (true || evaDoc.hash !== newHash) {
 
       evaDoc.hash = newHash;
-      console.log(`Writing new EVA doc ${util.inspect(evaDoc, { depth: 4 })}`);
+      this.logService.logger.debug(`Writing new EVA doc ${util.inspect(evaDoc, { depth: 4 })}`);
 
       const newDoc = await this.evaDb.insertDocument(evaDoc);
       return newDoc;
-
-      // } else {
-      //   console.log(`Digest has not changed, skipping update for ${changeListItem.grade}`);
-      // }
     } catch (err) {
-      console.log(`Failed to store updated EVA doc: ${err}`);
+      this.logService.logger.error(`Failed to store updated EVA doc: ${err}`);
       return null;
     }
   }

@@ -1,6 +1,7 @@
 const Html2Json = require('html2json').html2json;
 const md5 = require('md5');
 const request = require('request');
+const LogService = require('../helper/LogService');
 
 const calendarURL = 'http://pius-gymnasium.de/internes/a/termine.html';
 
@@ -38,6 +39,7 @@ class MonthItem {
  */
 class Calendar {
   constructor() {
+    this.logService = new LogService();
     this.monthItems = [];
     this._digest = null;
   }
@@ -156,7 +158,7 @@ class CalendarHandler {
       let json;
 
       if (error) {
-        console.log(`Failed to load calendar data: ${error}`);
+        this.logService.logger.error(`Failed to load calendar data: ${error}`);
         res.status(503).end();
       } else if (response.statusCode === 200) {
         try {
@@ -182,7 +184,7 @@ class CalendarHandler {
               .send(this.calendar);
           }
         } catch (err) {
-          console.log(`Error when transforming calendar data: ${err}`);
+          this.logService.logger.error(`Error when transforming calendar data: ${err}`);
           res.status(500).end();
         }
       } else {

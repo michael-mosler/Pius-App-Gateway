@@ -1,6 +1,7 @@
 const request = require('request');
 const util = require('util');
 const clone = require('clone');
+const LogService = require('../helper/LogService');
 const Config = require('../core-services/Config');
 
 /**
@@ -246,7 +247,8 @@ class VertretungsplanHelper {
 
       return deltaList.sort((item1, item2) => item1.ord - item2.ord);
     } catch (err) {
-      console.log(`ERROR: delta() failed with ${err}.\nInput: ${util.inspect(changeListItem, { depth: 8 })}\ncourse list: ${util.inspect(courseList, { depth: 8 })}`);
+      const logService = new LogService();
+      logService.logger.error(`delta() failed with ${err}.\nInput: ${util.inspect(changeListItem, { depth: 8 })}\ncourse list: ${util.inspect(courseList, { depth: 8 })}`);
       throw err;
     }
   }

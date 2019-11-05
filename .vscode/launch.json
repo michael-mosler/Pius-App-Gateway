@@ -10,7 +10,8 @@
       "request": "launch",
       "name": "Programm starten",
       "envFile": "${workspaceFolder}/pius-gateway.env",
-      "program": "${workspaceFolder}/server/server_app.js"
+      "program": "${workspaceFolder}/server/server_app.js",
+      "outputCapture": "std"
     }
   ]
 }

@@ -1,5 +1,6 @@
 const md5 = require('md5');
 const datetime = require('date-and-time');
+const LogService = require('../helper/LogService');
 const PostingsDb = require('../providers/PostingsDb');
 const SubstitutionScheduleHashesDb = require('../providers/SubstitutionScheduleHashesDb');
 const HtmlHelper = require('../helper/HtmlHelper');
@@ -9,6 +10,7 @@ const HtmlHelper = require('../helper/HtmlHelper');
  */
 class PostingsHandler {
   constructor() {
+    this.logService = new LogService();
     this.postingsDb = new PostingsDb();
     this.substitutionScheduleHashesDb = new SubstitutionScheduleHashesDb();
   }
@@ -40,7 +42,7 @@ class PostingsHandler {
         res.status(200).send({ messages, _digest: digest });
       }
     } catch (err) {
-      console.log(`Building postings failed: ${err}`);
+      this.logService.logger.error(`Building postings failed: ${err}`);
       res.status(503).end();
     }
   }

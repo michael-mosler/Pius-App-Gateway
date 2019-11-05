@@ -1,9 +1,11 @@
 const CloudantDb = require('./CloudantDb');
 const sha1 = require('sha1');
+const LogService = require('../helper/LogService');
 const Config = require('./Config');
 
 class DeviceTokemManager {
   constructor() {
+    this.logService = new LogService();
     this.deviceTokensDb = new CloudantDb('device-tokens', true);
   }
 
@@ -34,14 +36,14 @@ class DeviceTokemManager {
       courseList = _courseList || [];
     }
 
-    console.log(`Updating device token ${deviceToken} for messaging provider ${messagingProvider} with grade ${grade} and course list [${courseList}]`);
+    this.logService.logger.info(`Updating device token ${deviceToken} for messaging provider ${messagingProvider} with grade ${grade} and course list [${courseList}]`);
 
     this.deviceTokensDb.get(deviceToken)
       .then(document => Object.assign(document, { _id: deviceToken, grade, courseList, messagingProvider }))
       .then(newDocument => this.deviceTokensDb.insertDocument(newDocument))
       .then(() => res.status(200).end())
       .catch((err) => {
-        console.log(`${err}\n`);
+        this.logService.logger.error(`${err}\n`);
         res.status(500).end();
       });
   }
@@ -55,14 +57,14 @@ class DeviceTokemManager {
       const promises = [];
 
       failedList.forEach((item) => {
-        console.log(`Will remove ${item.deviceToken}. Reason: ${item.reason}`);
+        this.logService.logger.warn(`Will remove ${item.deviceToken}. Reason: ${item.reason}`);
         promises.push(this.deviceTokensDb.destroy({ _id: item.deviceToken, _rev: item._rev }));
       });
 
       Promise.all(promises)
         .then(() => resolve())
         .catch((err) => {
-          console.log(`Destroying failed device tokens failed with rejected promise: ${err}\n`);
+          this.logService.logger.error(`Destroying failed device tokens failed with rejected promise: ${err}\n`);
           resolve();
         });
     });

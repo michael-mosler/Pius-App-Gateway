@@ -1,4 +1,5 @@
 const memoryCache = require('memory-cache');
+const LogService = require('../helper/LogService');
 
 let instance;
 
@@ -11,6 +12,7 @@ let instance;
 class RequestCache {
   constructor(ttl) {
     if (!instance) {
+      this.logService = new LogService();
       this.ttl = (isNaN(ttl)) ? 900000 : ttl * 60 * 1000;
       this.cache = new memoryCache.Cache();
       instance = this;
@@ -26,8 +28,8 @@ class RequestCache {
    */
   cacheFunction_(req, res, next) {
     try {
-      let key = '__express__' + req.path;
-      let cacheContent = this.cache.get(key);
+      const key = '__express__' + req.path;
+      const cacheContent = this.cache.get(key);
 
       // When element is in cache return it immediately.
       if (cacheContent) {
@@ -39,7 +41,7 @@ class RequestCache {
           res.status(200).send(cacheContent);
         }
       } else {
-        console.log(`Key ${key} not in cache or outdated, will refetch.`);
+        this.logService.logger.info(`Key ${key} not in cache or outdated, will refetch.`);
 
         // Intercept res.send(): Put new data into cache before data is send.
         res.send_ = res.send;
@@ -63,7 +65,7 @@ class RequestCache {
               res.status(statusCode).end();
             }
           } catch (err) {
-            console.log(`res.send() for cached request failed: ${err.stack}`);
+            this.logService.logger.error(`res.send() for cached request failed: ${err.stack}`);
             res.status(500).end();
           };
         };
@@ -71,7 +73,7 @@ class RequestCache {
         next();
       }
     } catch (err) {
-      console.log(`Processing cached request failed: ${err}`);
+      this.logService.logger.error(`Processing cached request failed: ${err}`);
       this.cache.clear();
       res.status(503).end();
     }

@@ -10,6 +10,7 @@ const sha1 = require('sha1');
 const auth = require('http-auth');
 const expressStatusMonitor = require('express-status-monitor');
 
+const LogService = require('./helper/LogService');
 const Config = require('./core-services/Config');
 const PostingsHandler = require('./v2-services/PostingsHandler');
 const NewsReqHandler = require('./v1-services/NewsReqHandler');
@@ -35,6 +36,7 @@ const bot = new SlackBot();
  */
 class App {
   constructor() {
+    this.logService = new LogService();
     this.config = new Config();
     this.pusher = null;
     this.pusherJob = null;
@@ -57,12 +59,12 @@ class App {
     process.on('SIGTERM', () => process.exit(0));
     process.on('SIGINT', () => process.exit(0));
     process.on('uncaughtException', async (err) => {
-      console.log(`Unhandled exception: ${err.stack}`);
+      this.logService.logger.error(`Unhandled exception: ${err.stack}`);
       await bot.post(`Pius-Gateway crashed with an unhandled exception: ${err.stack}`);
       process.exit(-1);
     });
     process.on('unhandledRejection', async (reason) => {
-      console.log(`Unhandled promise rejection: ${reason.stack}`);
+      this.logService.logger.error(`Unhandled promise rejection: ${reason.stack}`);
       await bot.post(`Pius-Gateway crashed with an unhandled promise rejection: ${reason.stack || reason}`);
       process.exit(-1);
     });
@@ -83,7 +85,7 @@ class App {
    * Create the pusher job.
    */
   createPusherJob() {
-    console.log('Creating pusher job...');
+    this.logService.logger.info('Creating pusher job...');
     this.pusherJob = new Cron.CronJob('0 0,5,10,15,20,25,30,35,40,45,50,55 * * * *', () => { // eslint-disable-line no-unused-vars
       const vertretungsplanHandler = new VertretungsplanHandler();
       vertretungsplanHandler.checker();
@@ -113,7 +115,7 @@ class App {
     }
 
     if (process.env.COMPRESSION === 'true') {
-      console.log('Enabling compression');
+      this.logService.logger.info('Enabling compression');
       bot.post('Compression is enabled.');
       expressApp.use(Compression());
     }
@@ -146,7 +148,7 @@ class App {
       try {
         await f(req, res);
       } catch (err) {
-        console.log(`Function ${f} failed: ${err.stack}`);
+        this.logService.logger.error(`Function ${f} failed: ${err.stack}`);
         res.status(500).end();
       }
     };
@@ -225,7 +227,7 @@ class App {
         res.status(401).end();
       } else if (this.pusherJob) {
         this.pusherJob.start();
-        console.log('Starting pusher...');
+        this.logService.logger.info('Starting pusher...');
         res.status(200).end();
       } else {
         res.status(404).end();
@@ -236,7 +238,7 @@ class App {
       if (sha1(req.body.apiKey) !== Config.apiKey) {
         res.status(401).end();
       } else if (this.pusherJob) {
-        console.log('Stopping pusher...');
+        this.logService.logger.info('Stopping pusher...');
         this.pusherJob.stop();
         res.status(200).end();
       } else {
@@ -248,7 +250,7 @@ class App {
     if (process.env.NODE_ENV === 'dev') {
       // Trigger push notification.
       router.post('/checker', (req, res) => {
-        console.log('POST on /checker');
+        this.logService.logger.info('POST on /checker');
         const vertretungsplanHandler = new VertretungsplanHandler();
         vertretungsplanHandler.checker();
 
@@ -267,9 +269,9 @@ class App {
   run() {
     try {
       this.expressApp.listen(this.config.port);
-      console.log(`Application is listening at: ${this.config.port}`);
+      this.logService.logger.info(`Application is listening at: ${this.config.port}`);
     } catch (err) {
-      console.log(`The middleware failed to start with error ${err}\n`);
+      this.logService.logger.error(`The middleware failed to start with error ${err}\n`);
       process.exit(-1);
     }
   }
