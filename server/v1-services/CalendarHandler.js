@@ -39,7 +39,6 @@ class MonthItem {
  */
 class Calendar {
   constructor() {
-    this.logService = new LogService();
     this.monthItems = [];
     this._digest = null;
   }
@@ -60,6 +59,7 @@ class Calendar {
 
 class CalendarHandler {
   constructor() {
+    this.logService = new LogService();
     this.calendar = new Calendar();
     this.request = request;
   }
