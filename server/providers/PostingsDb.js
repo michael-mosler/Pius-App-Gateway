@@ -11,16 +11,22 @@ class PostingsDb extends CloudantDb {
   }
 
   /**
-   * Gets all active postings for a given date.
+   * Gets all active postings for a given date. If a target is given all messages for the given target plus
+   * all messages without any target set are returned.
    * @param {Date} forDate - Get all postings that are active for this date.
+   * @param {String} forTarget - Get messages for target. When null then all messages without any target are returned.
    * @returns {Promise<Object|Error>} Resolves to a list of documents with timestamp and message property.
    */
-  async getPostings({ forDate }) {
+  async getPostings({ forDate, forTarget }) {
     const filterDate = datetime.format(forDate, 'YYYY-MM-DDTHH:mm:SS');
     const postings = await this.find({
-      'selector': {
-        '_id': { '$gt': filterDate },
-        'validFrom': { '$lt': filterDate },
+      selector: {
+        _id: { $gt: filterDate },
+        validFrom: { $lt: filterDate },
+        $or: [
+          { target: { $exists: false } },
+          { target: { $regex: forTarget || '.*' } },
+        ],
       },
     });
 

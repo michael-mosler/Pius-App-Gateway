@@ -10,6 +10,7 @@ applications:
     COMPRESSION: true
     DIGEST_CHECK: true
     SLACK_ENABLED: false
+    CONSOLE_LOG_LEVEL: debug
     FILE_LOG_LEVEL: info
   instances: 1
   memory: 128M

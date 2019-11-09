@@ -21,4 +21,5 @@ applications:
     COMPRESSION: true
     DIGEST_CHECK: true
     SLACK_ENABLED: true
+    FILE_LOG_LEVEL: warn
   stack: cflinuxfs3

@@ -8,7 +8,8 @@ const Cron = require('cron');
 const url = require('url');
 const sha1 = require('sha1');
 const auth = require('http-auth');
-const expressStatusMonitor = require('express-status-monitor');
+const ExpressUseragent = require('express-useragent');
+const ExpressStatusMonitor = require('express-status-monitor');
 
 const LogService = require('./helper/LogService');
 const Config = require('./core-services/Config');
@@ -24,7 +25,7 @@ const SlackBot = require('./core-services/SlackBot');
 const DeviceTokenManager = require('./core-services/DeviceTokenManager');
 const RequestCache = require('./providers/RequestCache');
 
-const bot = new SlackBot();
+const slackBot = new SlackBot();
 
 /**
  * This class implements our middleware. It create an Express middleware and registers
@@ -60,12 +61,12 @@ class App {
     process.on('SIGINT', () => process.exit(0));
     process.on('uncaughtException', async (err) => {
       this.logService.logger.error(`Unhandled exception: ${err.stack}`);
-      await bot.post(`Pius-Gateway crashed with an unhandled exception: ${err.stack}`);
+      await slackBot.post(`Pius-Gateway crashed with an unhandled exception: ${err.stack}`);
       process.exit(-1);
     });
     process.on('unhandledRejection', async (reason) => {
       this.logService.logger.error(`Unhandled promise rejection: ${reason.stack}`);
-      await bot.post(`Pius-Gateway crashed with an unhandled promise rejection: ${reason.stack || reason}`);
+      await slackBot.post(`Pius-Gateway crashed with an unhandled promise rejection: ${reason.stack || reason}`);
       process.exit(-1);
     });
 
@@ -77,12 +78,13 @@ class App {
 
     if (process.env.START_PUSHER === 'true') {
       this.pusherJob.start();
-      bot.post('Pusher has been started.');
+      slackBot.post('Pusher has been started.');
     }
   }
 
   /**
    * Create the pusher job.
+   * @private
    */
   createPusherJob() {
     this.logService.logger.info('Creating pusher job...');
@@ -95,7 +97,6 @@ class App {
   /**
    * Initialises the Express middleware.
    * @returns {Express}
-   * @static
    * @private
    */
   initMiddleware() {
@@ -106,17 +107,19 @@ class App {
       cb(user === Config.monitorCredentials.user && sha1(password) === Config.monitorCredentials.password);
     });
 
-    const statusMonitor = expressStatusMonitor({ path: '' });
+    expressApp.use(ExpressUseragent.express());
+
+    const statusMonitor = ExpressStatusMonitor({ path: '' });
     expressApp.use(statusMonitor.middleware);
     expressApp.get('/status', auth.connect(basic), statusMonitor.pageRoute);
 
     if (process.env.DIGEST_CHECK === 'true') {
-      bot.post('Digest check is enabled.');
+      slackBot.post('Digest check is enabled.');
     }
 
     if (process.env.COMPRESSION === 'true') {
       this.logService.logger.info('Enabling compression');
-      bot.post('Compression is enabled.');
+      slackBot.post('Compression is enabled.');
       expressApp.use(Compression());
     }
 
@@ -278,8 +281,8 @@ class App {
 }
 
 (async () => {
-  await bot.post('Pius-Gateway is being (re)started.');
+  await slackBot.post('Pius-Gateway is being (re)started.');
   const app = new App();
   app.run();
-  bot.post('*Pius-Gateway is ready.*');
+  slackBot.post('*Pius-Gateway is ready.*');
 })();
