@@ -262,7 +262,7 @@ class VertretungsplanHelper {
    */
   static validateLogin(req) {
     const options = {
-      url: 'http://pius-gymnasium.de/vertretungsplan/',
+      url: 'https://pius-gymnasium.de/vertretungsplan/',
       headers: {
         Authorization: req.header('authorization'),
       },
