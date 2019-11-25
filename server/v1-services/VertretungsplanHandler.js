@@ -10,7 +10,7 @@ const Config = require('../core-services/Config');
 const BasicAuthProvider = require('../providers/BasicAuthProvider');
 const SubstitionScheduleHashessDb = require('../providers/SubstitutionScheduleHashesDb');
 
-const vertretungsplanURL = 'http://pius-gymnasium.de/vertretungsplan/';
+const vertretungsplanURL = 'https://pius-gymnasium.de/vertretungsplan/';
 
 /**
  * A single Vertretungsplan item. Every item consists of a set of properties that are
