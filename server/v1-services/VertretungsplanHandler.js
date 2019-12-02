@@ -301,6 +301,16 @@ class VertretungsplanHandler {
    * @param {ServerResponse} res - Response object
    */
   process(req, res) {
+    // Hack: Make sure that new logins are being used.
+    const b64auth = (req.headers.authorization || '').split(' ')[1] || '';
+    const [username, password] = Buffer.from(b64auth, 'base64').toString().split(':');
+
+    if (username === 'Papst' && password === 'PiusX') {
+      this.logService.logger.info('Old credentials detected when requesting /vertretungsplan! Sending immediate 401.');
+      res.status(401).end();
+      return;
+    }
+
     // noinspection JSUnresolvedFunction
     this.request.get(vertretungsplanURL, {
       headers: {

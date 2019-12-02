@@ -151,7 +151,8 @@ class App {
       try {
         await f(req, res);
       } catch (err) {
-        this.logService.logger.error(`Function ${f} failed: ${err.stack}`);
+        const logService = new LogService();
+        logService.logger.error(`Function ${f} failed: ${err.stack}`);
         res.status(500).end();
       }
     };
