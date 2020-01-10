@@ -15,6 +15,7 @@ const vertretungsplanURL = 'https://pius-gymnasium.de/vertretungsplan/';
 // Regular grades to keep. There may be some "grades" we do not want to keep.
 // In the past, accidently "AUFS" was used which is not of any meaning to us.
 const allValidGradesPattern = new RegExp('^((\\d[A-E])|(Q[12])|(EF)|(IK)|(VT)|(HW))');
+const allExistingGradesPattern = new RegExp('^((\\d[A-E])|(Q[12])|(EF)|(IK)|(VT)|(HW)|(AUFS))');
 
 /**
  * A single Vertretungsplan item. Every item consists of a set of properties that are
@@ -224,7 +225,7 @@ class VertretungsplanHandler {
       }
     } else if (json.node === 'text' && json.text.match(/^Heute ist/)) {
       this.vertretungsplan.tickerText = json.text;
-    } else if ((parent && parent.tag === 'th') && json.node === 'text' && json.text.match(allValidGradesPattern)) {
+    } else if ((parent && parent.tag === 'th') && json.node === 'text' && json.text.match(allExistingGradesPattern)) {
       this.vertretungsplan.currentDateItem.gradeItems.push(new GradeItem(json.text));
     } else if (json.attr && json.attr.class instanceof Array && json.attr.class[0] === 'vertretung' && json.attr.class[1] === 'neu') {
       let text = VertretungsplanHandler.mergeSubTextItems(json);
