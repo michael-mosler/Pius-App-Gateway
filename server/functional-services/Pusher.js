@@ -51,16 +51,19 @@ class Device {
  * @property {String} grade - Grade item has been created for (r/o).
  * @property {Array<Device>} devices - List of all devices this item is intended for (r/o).
  * @property {Array<Object>} deltaList - Delta list that has been computed for this item (r/o).
- * @property {Array<String>} deltaList - An array containing all device tokens of devices that have been added to this item (r/o).
+ * @property {Array<String>} devices - An array containing all device tokens of devices that have been added to this item (r/o).
+ * @property {Vertretungsplan} substitutionSchedule - Schedule for this push item. This is what app shows in dashboard view (r/o).
  * @private
  */
 class PushItem {
   /**
    * @param {String} grade - Grade for which information is provided.
-   * @param {{Array<Object>}} deltaList - Changes in schedule for grade
+   * @param {Vertretungsplan} substitutionSchedule - Filtered schedule for given grade
+   * @param {Array<Object>} deltaList - Changes in schedule for grade
    */
-  constructor(grade, deltaList) {
+  constructor(grade, substitutionSchedule, deltaList) {
     this._grade = grade;
+    this._substitutionSchedule = substitutionSchedule;
     this._deltaList = deltaList;
     this._devices = [];
     this._revMap = new Map();
@@ -68,6 +71,10 @@ class PushItem {
 
   get grade() {
     return this._grade;
+  }
+
+  get substitutionSchedule() {
+    return this._substitutionSchedule;
   }
 
   get deltaList() {
@@ -201,14 +208,14 @@ class Pusher {
 
             devices.forEach(device => {
               const deltaList = VertretungsplanHelper.delta(changeListItem, device.courseList || []);
-              const pushItem = new PushItem(changeListItem.grade, deltaList);
+              const pushItem = new PushItem(changeListItem.grade, changeListItem.substitutionSchedule, deltaList);
               pushItem.add(new Device(device._id, device._rev, device.messagingProvider));
               this.sendApnPushNotification(pushItem.for('apn'));
               this.sendFcmPushNotification(pushItem.for('fcm'));
             });
           } else {
             const deltaList = VertretungsplanHelper.delta(changeListItem);
-            const pushItem = new PushItem(changeListItem.grade, deltaList);
+            const pushItem = new PushItem(changeListItem.grade, changeListItem.substitutionSchedule, deltaList);
             device.docs.forEach(device => pushItem.add(new Device(device._id, device._rev, device.messagingProvider)));
             this.sendApnPushNotification(pushItem.for('apn'));
             this.sendFcmPushNotification(pushItem.for('fcm'));
@@ -309,7 +316,7 @@ class Pusher {
         try {
           const message = {
             tokens: chunk,
-            data: { deltaList: data, timestamp: now },
+            data: { deltaList: data, substitutionSchedule: JSON.stringify(pushItem.substitutionSchedule), timestamp: now },
             android: {
               ttl: 1000 * 60 * 60,
               notification: {

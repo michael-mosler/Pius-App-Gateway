@@ -3,7 +3,7 @@ const sha1 = require('sha1');
 const LogService = require('../helper/LogService');
 const Config = require('./Config');
 
-class DeviceTokemManager {
+class DeviceTokenManager {
   constructor() {
     this.logService = new LogService();
     this.deviceTokensDb = new CloudantDb('device-tokens', true);
@@ -20,7 +20,7 @@ class DeviceTokemManager {
       return;
     }
 
-    const { deviceToken, grade, courseList: _courseList = [], messagingProvider = 'apn' } = req.body;
+    const { deviceToken, grade, courseList: _courseList = [], messagingProvider = 'apn', version = '' } = req.body;
 
     // Workaround for JSON creation error on Android. courseList is not sent as JSON array
     // but as string.
@@ -39,7 +39,7 @@ class DeviceTokemManager {
     this.logService.logger.info(`Updating device token ${deviceToken} for messaging provider ${messagingProvider} with grade ${grade} and course list [${courseList}]`);
 
     this.deviceTokensDb.get(deviceToken)
-      .then(document => Object.assign(document, { _id: deviceToken, grade, courseList, messagingProvider }))
+      .then(document => Object.assign(document, { _id: deviceToken, grade, courseList, messagingProvider, version }))
       .then(newDocument => this.deviceTokensDb.insertDocument(newDocument))
       .then(() => res.status(200).end())
       .catch((err) => {
@@ -71,4 +71,4 @@ class DeviceTokemManager {
   }
 }
 
-module.exports = DeviceTokemManager;
+module.exports = DeviceTokenManager;

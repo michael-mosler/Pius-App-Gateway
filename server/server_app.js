@@ -89,7 +89,7 @@ class App {
   createPusherJob() {
     this.logService.logger.info('Creating pusher job...');
     this.pusherJob = new Cron.CronJob('0 0,5,10,15,20,25,30,35,40,45,50,55 * * * *', () => { // eslint-disable-line no-unused-vars
-      const vertretungsplanHandler = new VertretungsplanHandler();
+      const vertretungsplanHandler = new VertretungsplanHandler('v2');
       vertretungsplanHandler.checker();
     }, null, false, 'Europe/Berlin');
   }
@@ -255,7 +255,7 @@ class App {
       // Trigger push notification.
       router.post('/checker', (req, res) => {
         this.logService.logger.info('POST on /checker');
-        const vertretungsplanHandler = new VertretungsplanHandler();
+        const vertretungsplanHandler = new VertretungsplanHandler('v2');
         vertretungsplanHandler.checker();
 
         res

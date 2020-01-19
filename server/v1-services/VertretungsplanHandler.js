@@ -8,7 +8,7 @@ const VertretungsplanHelper = require('../helper/VertretungsplanHelper');
 const PushEventEmitter = require('../functional-services/PushEventEmitter');
 const Config = require('../core-services/Config');
 const BasicAuthProvider = require('../providers/BasicAuthProvider');
-const SubstitionScheduleHashessDb = require('../providers/SubstitutionScheduleHashesDb');
+const SubstitionScheduleHashesDb = require('../providers/SubstitutionScheduleHashesDb');
 
 const vertretungsplanURL = 'https://pius-gymnasium.de/vertretungsplan/';
 
@@ -104,10 +104,15 @@ class Vertretungsplan {
   constructor() {
     this.tickerText = '';
     this._additionalText = '';
-    // noinspection JSUnusedGlobalSymbols
     this.lastUpdate = '';
     this.dateItems = [];
-    this._digest = null;
+  }
+
+  /**
+   * Gets md5 hash of this.
+   */
+  get md5() {
+    return md5(JSON.stringify(this));
   }
 
   /**
@@ -324,19 +329,14 @@ class VertretungsplanHandler {
       } else if (response.statusCode === 200) {
         try {
           const strData = data.toString();
-          const digest = md5(strData);
+          const json = Html2Json(strData);
+          this.transform(json);
+          this.vertretungsplan.filter(req.query.forGrade || allValidGradesPattern);
 
-          // When not modified do not send any data but report "not modified".
-          // noinspection JSUnresolvedVariable
-          if (process.env.DIGEST_CHECK === 'true' && digest === req.query.digest) {
+          if (process.env.DIGEST_CHECK === 'true' && this.vertretungsplan.md5 === req.query.digest) {
             res.status(304).end();
           } else {
-            const json = Html2Json(strData);
-            this.transform(json);
-
-            // noinspection JSUnresolvedVariable
-            this.vertretungsplan.filter(req.query.forGrade || allValidGradesPattern);
-            this.vertretungsplan.digest = digest;
+            this.vertretungsplan.digest = this.vertretungsplan.md5;
             res
               .status(response.statusCode)
               .send(this.vertretungsplan);
@@ -374,7 +374,7 @@ class VertretungsplanHandler {
             this.logService.logger.error(`Failed to load substitution schedule for checker: ${error}`);
           } else if (response.statusCode === 200) {
             try {
-              const substitionScheduleHashessDb = new SubstitionScheduleHashessDb();
+              const substitionScheduleHashesDb = new SubstitionScheduleHashesDb();
               const strData = data.toString();
 
               const json = Html2Json(strData);
@@ -387,12 +387,12 @@ class VertretungsplanHandler {
                 filteredVertretungsplan.filter(grade);
 
                 // Compute sub-hash for this special schedule and put it on our list.
-                const subHash = md5(JSON.stringify(filteredVertretungsplan));
-                checkList.push({ grade, hash: subHash, substitutionSchedule: filteredVertretungsplan });
+                filteredVertretungsplan.digest = filteredVertretungsplan.md5;
+                checkList.push({ grade, hash: filteredVertretungsplan.digest, substitutionSchedule: filteredVertretungsplan });
               });
 
               // Cross check our list and emit push event for all items which have changed.
-              substitionScheduleHashessDb.crossCheck(checkList)
+              substitionScheduleHashesDb.crossCheck(checkList)
                 .then((changeList) => {
                   changeList.forEach(item => pushEventEmitter.emit('push', item));
                 })
