@@ -312,7 +312,7 @@ class VertretungsplanHandler {
     const [username, password] = Buffer.from(b64auth, 'base64').toString().split(':');
 
     if (username === 'Papst' && password === 'PiusX') {
-      this.logService.logger.info('Old credentials detected when requesting /vertretungsplan! Sending immediate 401.');
+      this.logService.logger.info('VertretungsplanHandler: Old credentials detected when requesting /vertretungsplan! Sending immediate 401.');
       res.status(401).end();
       return;
     }
@@ -324,7 +324,7 @@ class VertretungsplanHandler {
       },
     }, (error, response, data) => {
       if (error) {
-        this.logService.logger.error(`Failed to load substition schedule: ${error}`);
+        this.logService.logger.error(`VertretungsplanHandler: Failed to load substition schedule: ${error}`);
         res.status(503).end();
       } else if (response.statusCode === 200) {
         try {
@@ -333,16 +333,21 @@ class VertretungsplanHandler {
           this.transform(json);
           this.vertretungsplan.filter(req.query.forGrade || allValidGradesPattern);
 
-          if (process.env.DIGEST_CHECK === 'true' && this.vertretungsplan.md5 === req.query.digest) {
+          const currentDigest = this.vertretungsplan.md5;
+          this.logService.logger.debug(`VertretungsplanHandler: Digest check: Grade ${req.query.forGrade || 'none'}, Ref digest ${req.query.digest || 'none'}, Current digest ${currentDigest}`);
+
+          if (process.env.DIGEST_CHECK === 'true' && currentDigest === req.query.digest) {
+            this.logService.logger.debug('VertretungsplanHandler: Sending HTTP status code 304');
             res.status(304).end();
           } else {
-            this.vertretungsplan.digest = this.vertretungsplan.md5;
+            this.logService.logger.debug(`VertretungsplanHandler: Sending HTTP status code ${response.statusCode}`);
+            this.vertretungsplan.digest = currentDigest;
             res
               .status(response.statusCode)
               .send(this.vertretungsplan);
           }
         } catch (err) {
-          this.logService.logger.error(`Error when transforming substitution schedule: ${err}`);
+          this.logService.logger.error(`VertretungsplanHandler: Error when transforming substitution schedule: ${err}`);
           res.status(500).end();
         }
       } else {
@@ -359,7 +364,7 @@ class VertretungsplanHandler {
    * hash that apps should have locally to be to date.
    */
   checker() {
-    this.logService.logger.info('##### Checking for new changes to push...');
+    this.logService.logger.info('VertretungsplanHandler: ##### Checking for new changes to push...');
     const pushEventEmitter = new PushEventEmitter();
     const basicAuthProvider = new BasicAuthProvider();
 
@@ -371,7 +376,7 @@ class VertretungsplanHandler {
           },
         }, (error, response, data) => {
           if (error) {
-            this.logService.logger.error(`Failed to load substitution schedule for checker: ${error}`);
+            this.logService.logger.error(`VertretungsplanHandler: Failed to load substitution schedule for checker: ${error}`);
           } else if (response.statusCode === 200) {
             try {
               const substitionScheduleHashesDb = new SubstitionScheduleHashesDb();
@@ -397,21 +402,21 @@ class VertretungsplanHandler {
                   changeList.forEach(item => pushEventEmitter.emit('push', item));
                 })
                 .catch((err) => {
-                  this.logService.logger.error(`Checker failed with a rejected promise when cross checking: ${err}`);
+                  this.logService.logger.error(`VertretungsplanHandler: Checker failed with a rejected promise when cross checking: ${err}`);
                 });
             } catch (err) {
-              this.logService.logger.error(`Error when transforming substitution schedule for checker: ${err}`);
+              this.logService.logger.error(`VertretungsplanHandler: Error when transforming substitution schedule for checker: ${err}`);
             }
           } else {
-            this.logService.logger.error(`Checker failed to get latest data with status ${response.statusCode}\n`);
+            this.logService.logger.error(`VertretungsplanHandler: Checker failed to get latest data with status ${response.statusCode}\n`);
           }
         });
       })
       .catch((err) => {
-        this.logService.logger.error(`Check failed with a rejected promise: ${err}\n`);
+        this.logService.logger.error(`VertretungsplanHandler: Check failed with a rejected promise: ${err}\n`);
       });
 
-    this.logService.logger.info('##### Checking for new changes to push... DONE');
+    this.logService.logger.info('VertretungsplanHandler: ##### Checking for new changes to push... DONE');
   }
 
   /**
@@ -426,7 +431,7 @@ class VertretungsplanHandler {
       const statusCode = await VertretungsplanHelper.validateLogin(req);
       res.status(statusCode).end();
     } catch (err) {
-      this.logService.logger.warn(`VertretungsplanHandler could not validate login: ${err}`);
+      this.logService.logger.warn(`VertretungsplanHandler: Could not validate login: ${err}`);
       res.status(503).end();
     }
   }

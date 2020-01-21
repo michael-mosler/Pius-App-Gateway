@@ -16,7 +16,7 @@ applications:
   env:
     NODE_ENV: production
     BASE_URL: https://pius-gateway.eu-de.mybluemix.net
-    START_PUSHER: true
+    START_PUSHER: false
     APN_PRODUCTION: true
     COMPRESSION: true
     DIGEST_CHECK: true
