@@ -231,16 +231,34 @@ class VertretungsplanHelper {
 
         gradeItemsOld[0].vertretungsplanItems = newVertretungsplanItemsOld;
 
-        // Compare items that are left in both lists. The lists are in sync now, thus we can use
-        // a single index.
+        // Compare items that are left in both lists. There are rare conditions in which lists are still
+        // not in sync. E.g. new list might be longer than old one. Following code has to handle this
+        // situation, but we will also dump data so that we can learn when this happens.
+        // One known situation is a split of an existing substitution into two with lesson and course
+        // remaining the same. New list will then hold two items where old has only one. This
+        // change is not detected before because actually all items look the same in terms of changes
+        // we can detect.
+        if (gradeItemsNew[0].vertretungsplanItems.length !== gradeItemsOld[0].vertretungsplanItems.length) {
+          const logService = new LogService();
+          logService.logger.info(
+            'VertretungsplanHelper.delta: Assertion failed. Expected new and old lists to be in sync but they aren\'t.\n' +
+            `New: ${util.inspect(gradeItemsNew[0].vertretungsplanItems, { depth: 8 })}\n` +
+            `Old: ${util.inspect(gradeItemsOld[0].vertretungsplanItems, { depth: 8 })}`);
+        }
+
         gradeItemsNew[0].vertretungsplanItems.forEach((newItem, index) => {
-          const identical = newItem.detailItems.reduce((a, item, itemIndex) => {
-            return a && item === gradeItemsOld[0].vertretungsplanItems[index].detailItems[itemIndex];
+          const oldDetailItems = (gradeItemsOld[0].vertretungsplanItems[index] || {}).detailItems;
+          const identical = oldDetailItems && newItem.detailItems.reduce((a, item, itemIndex) => {
+            return a && item === oldDetailItems[itemIndex];
           }, true);
 
-          // Not identical or EVA has been deleted.
-          if (!identical || gradeItemsNew[0].vertretungsplanItems.length !== gradeItemsOld[0].vertretungsplanItems.length) {
-            deltaList.push(new DeltaItem({ date: titleNew, type: 'CHANGED', detailsNew: newItem.detailItems, detailsOld: gradeItemsOld[0].vertretungsplanItems[index].detailItems }));
+          // Not identical.
+          if (!identical) {
+            if (oldDetailItems) {
+              deltaList.push(new DeltaItem({ date: titleNew, type: 'CHANGED', detailsNew: newItem.detailItems, detailsOld: gradeItemsOld[0].vertretungsplanItems[index].detailItems }));
+            } else {
+              deltaList.push(new DeltaItem({ date: titleNew, type: 'ADDED', detailsNew: newItem.detailItems }));
+            }
           }
         });
       }
