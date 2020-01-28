@@ -40,7 +40,7 @@ class App {
     this.logService = new LogService();
     this.config = new Config();
     this.pusher = null;
-    this.pusherJob = null;
+    this.pusherJobs = [];
     this.requestCache = null;
 
     this.initApp();
@@ -74,11 +74,11 @@ class App {
 
     // Initialise pusher.
     this.pusher = new Pusher();
-    this.createPusherJob();
+    this.createPusherJobs();
 
     if (process.env.START_PUSHER === 'true') {
-      this.pusherJob.start();
-      slackBot.post('Pusher has been started.');
+      this.pusherJobs.forEach(job => job.start());
+      slackBot.post('Pushers have been started.');
     }
   }
 
@@ -86,12 +86,21 @@ class App {
    * Create the pusher job.
    * @private
    */
-  createPusherJob() {
-    this.logService.logger.info('Creating pusher job...');
-    this.pusherJob = new Cron.CronJob('0 0,5,10,15,20,25,30,35,40,45,50,55 * * * *', () => { // eslint-disable-line no-unused-vars
-      const vertretungsplanHandler = new VertretungsplanHandler('v2');
-      vertretungsplanHandler.checker();
-    }, null, false, 'Europe/Berlin');
+  createPusherJobs() {
+    this.logService.logger.info('Creating pusher jobs...');
+
+    // From 9am to 6:55am we check every 5 minutes. From 7am to 8:59am we check
+    // every minute.
+    this.pusherJobs.push(
+      new Cron.CronJob('0 */5 0-6,9-23 * * *', () => {
+        const vertretungsplanHandler = new VertretungsplanHandler('v2');
+        vertretungsplanHandler.checker();
+      }, null, false, 'Europe/Berlin'),
+      new Cron.CronJob('0 * 7-8 * * *', () => {
+        const vertretungsplanHandler = new VertretungsplanHandler('v2');
+        vertretungsplanHandler.checker();
+      }, null, false, 'Europe/Berlin'),
+    );
   }
 
   /**
@@ -229,24 +238,20 @@ class App {
     router.post('/startPusher', (req, res) => {
       if (sha1(req.body.apiKey) !== Config.apiKey) {
         res.status(401).end();
-      } else if (this.pusherJob) {
-        this.pusherJob.start();
-        this.logService.logger.info('Starting pusher...');
-        res.status(200).end();
       } else {
-        res.status(404).end();
+        this.logService.logger.info('Starting pushers...');
+        this.pusherJobs.forEach(job => job.start());
+        res.status(200).end();
       }
     });
 
     router.delete('/startPusher', (req, res) => {
       if (sha1(req.body.apiKey) !== Config.apiKey) {
         res.status(401).end();
-      } else if (this.pusherJob) {
-        this.logService.logger.info('Stopping pusher...');
-        this.pusherJob.stop();
-        res.status(200).end();
       } else {
-        res.status(404).end();
+        this.logService.logger.info('Stopping pushers..');
+        this.pusherJobs.forEach(job => job.stop());
+        res.status(200).end();
       }
     });
 

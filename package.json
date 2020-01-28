@@ -7,7 +7,7 @@
     "url": "git@github.org:Pius-Gateway.git"
   },
   "engines": {
-    "node": "10.x.x",
+    "node": "12.x.x",
     "npm": "6.x.x"
   },
   "author": "Michael Mosler-Krings, Felix Krings",
