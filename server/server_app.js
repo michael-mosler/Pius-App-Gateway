@@ -111,16 +111,23 @@ class App {
   initMiddleware() {
     const expressApp = Express();
 
-    const basic = auth.basic({ realm: 'Monitor Area' }, (user, password, cb) => {
-      // eslint-disable-next-line standard/no-callback-literal
-      cb(user === Config.monitorCredentials.user && sha1(password) === Config.monitorCredentials.password);
-    });
+    const basic =
+      auth.basic({
+        realm: 'Monitor Area',
+        msg401: 'Die Anmeldedaten sind ung&uuml;ltig.',
+        contentType: 'text/html',
+      }, (user, password, cb) => {
+        // eslint-disable-next-line standard/no-callback-literal
+        cb(user === Config.monitorCredentials.user && sha1(password) === Config.monitorCredentials.password);
+      });
 
     expressApp.use(ExpressUseragent.express());
 
     const statusMonitor = ExpressStatusMonitor({ path: '' });
     expressApp.use(statusMonitor.middleware);
-    expressApp.get('/status', auth.connect(basic), statusMonitor.pageRoute);
+    expressApp.get('/status',
+      (req, res, next) => { basic.check((req, res) => { next(); })(req, res); },
+      statusMonitor.pageRoute);
 
     if (process.env.DIGEST_CHECK === 'true') {
       slackBot.post('Digest check is enabled.');
