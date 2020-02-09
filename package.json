@@ -46,7 +46,8 @@
   },
   "scripts": {
     "start": "node server/server_app.js",
-    "test": "mocha --recursive"
+    "test": "mocha --recursive",
+    "doc": "node node_modules/jsdoc/jsdoc.js --recurse -d doc -a all server"
   },
   "devDependencies": {
     "eslint": "^6.8.0",
@@ -61,6 +62,7 @@
     "jsdoc": "^3.6.3",
     "mocha": "^7.0.1",
     "nyc": "^15.0.0",
+    "supertest": "^4.0.2",
     "testdouble": "^3.12.5"
   }
 }

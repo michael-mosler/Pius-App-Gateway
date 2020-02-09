@@ -1,10 +1,12 @@
-.DS_store
+.DS_Store
 .idea
+.nyc_output
 apn-credentials.json
 fcm-credentials.json
 pius-vertretungsplan-credentials.json
 service-cedentials.json
 slack-token.json
+coverage
 doc
 node_modules
 pius-gateway.env

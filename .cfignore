@@ -1,20 +1,26 @@
 # Directories in app root to be ignored
+/coverage
 /doc
 /test
+/.nyc_output
 
 # All node_modules directories
 /node_modules
 
 # Files in app root.
 /apn-credentials.json
-/fcm-credentials.json
-/build-*
 /conf.json
+/fcm-credentials.json
+/pius-vertretungsplan-credentials.json
+/service-credentials.json
+/slack-token.json
+/pius-gateway.env
+
+/build-*
+
 /.DS_Store
 /.eslintrc.js
 /.gitignore
-/pius-gateway.env
-/pius-vertretungsplan-credentials.json
-README.md
-/slack-token.json
 /.vscode
+
+README.md

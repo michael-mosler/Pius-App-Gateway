@@ -9,6 +9,15 @@ describe('EvaService', () => {
   let CloudantDb;
 
   beforeEach(() => {
+    const LogService = td.replace('../../server/helper/LogService');
+    LogService.prototype.logger = td.constructor();
+    LogService.prototype.logger = {
+      debug: td.function(),
+      info: td.function(),
+      warn: td.function(),
+      error: td.function(),
+    };
+
     CloudantDb = td.replace('../../server/core-services/CloudantDb');
   });
 
@@ -17,7 +26,7 @@ describe('EvaService', () => {
   });
 
   it('should skip document update when up to date', async () => {
-    let { EvaCollectionItem, EvaItem, EvaDoc } = td.replace('../../server/data-objects/EvaServiceData');
+    const { EvaCollectionItem, EvaItem, EvaDoc } = td.replace('../../server/data-objects/EvaServiceData');
 
     const fs = require('fs');
     const changeListItem = JSON.parse(fs.readFileSync('./test/functional-services/ChangeListItem.json'));
@@ -50,7 +59,7 @@ describe('EvaService', () => {
   });
 
   it('should not fail on insertDocument error', async () => {
-    let { EvaCollectionItem, EvaItem, EvaDoc } = td.replace('../../server/data-objects/EvaServiceData');
+    const { EvaCollectionItem, EvaItem, EvaDoc } = td.replace('../../server/data-objects/EvaServiceData');
 
     const fs = require('fs');
     const changeListItem = JSON.parse(fs.readFileSync('./test/functional-services/ChangeListItem.json'));
@@ -83,7 +92,7 @@ describe('EvaService', () => {
   });
 
   it('should update when changed', async () => {
-    let { EvaCollectionItem, EvaItem, EvaDoc } = td.replace('../../server/data-objects/EvaServiceData');
+    const { EvaCollectionItem, EvaItem, EvaDoc } = td.replace('../../server/data-objects/EvaServiceData');
 
     const fs = require('fs');
     const changeListItem = JSON.parse(fs.readFileSync('./test/functional-services/ChangeListItem.json'));
@@ -155,7 +164,7 @@ describe('EvaService', () => {
 
       const EvaService = require('../../server/functional-services/EvaService');
       const evaService = new EvaService();
-      let r = await evaService.getEvaItems('EF', 'MLK1,DGK2,SPGK4');
+      const r = await evaService.getEvaItems('EF', 'MLK1,DGK2,SPGK4');
       expect(r).toEqual(evaDocMatched);
     } catch (err) {
       expect(false).toBeTruthy(err);
@@ -172,7 +181,7 @@ describe('EvaService', () => {
 
       const EvaService = require('../../server/functional-services/EvaService');
       const evaService = new EvaService();
-      let r = await evaService.getEvaItems('EF');
+      const r = await evaService.getEvaItems('EF');
       expect(r).toEqual(evaDoc.evaCollection);
     } catch (err) {
       expect(false).toBeTruthy(err);
@@ -186,7 +195,7 @@ describe('EvaService', () => {
 
       const EvaService = require('../../server/functional-services/EvaService');
       const evaService = new EvaService();
-      let r = await evaService.getEvaItems('EF');
+      const r = await evaService.getEvaItems('EF');
       expect(r).toEqual([]);
     } catch (err) {
       expect(false).toBeTruthy(err);
