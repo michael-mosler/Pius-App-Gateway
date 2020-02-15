@@ -105,10 +105,20 @@ class DeviceTokenManager {
     }
   }
 
+  /**
+   * Get all device token documents for a given grade.
+   * @param {String} forGrade Grade for which token shall be returned.
+   * @returns {Promise<Object|Error>} Resolves to a all matching documents from device-tokens DB.
+   */
   getDeviceTokens(forGrade) {
     return this.deviceTokensDb.find({ selector: { grade: forGrade } });
   }
 
+  /**
+   * Delete all token given in an array of documents from device-tokens DB.
+   * @param {Object[]} failedList List of documents from device-tokens DB which have an invalid device token.
+   * @returns {Promise} Promise that is always resolved when housekeeping is finished.
+   */
   housekeeping(failedList) {
     return new Promise((resolve) => {
       const promises = [];

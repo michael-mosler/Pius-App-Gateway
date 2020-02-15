@@ -37,9 +37,7 @@ describe('DeviceTokenManager', () => {
       .thenReturn(true);
   });
 
-  afterEach(() => {
-    td.reset();
-  });
+  afterEach(() => td.reset());
 
   it('Should deny invalid api key', done => {
     const agent = supertest.agent(app);
