@@ -89,10 +89,7 @@ describe('DeviceTokenManager', () => {
       deviceTokenManager.registerDeviceToken(req, res);
     });
 
-    const agent = supertest.agent(app);
-
-    // Test, will throw when not running as expected.
-    agent
+    supertest.agent(app)
       .post('/register')
       .set('Content-Type', 'application/json')
       .send({

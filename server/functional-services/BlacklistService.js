@@ -3,7 +3,7 @@ const { Credential, BlacklistedCredentialsDb } = require('../providers/Blacklist
 /**
  * Implements all methods that are needed for blacklist management.
  */
-class BlacklistCredentialsService {
+class BlacklistService {
   constructor() {
     this.blacklistCredentialsDb = new BlacklistedCredentialsDb();
   }
@@ -13,8 +13,7 @@ class BlacklistCredentialsService {
    * document to check for actual blacklisting.
    * @param {String} userId User to check for blacklisting.
    * @param {String} pwd Password of user to check for blacklisting.
-   * @returns {Credential} When blacklisted document from blacklist-credentials DB
-   * @throws {Error}
+   * @returns {Promise<Credential|Error>} When blacklisted document from blacklist-credentials DB
    */
   async checkBlacklisted(userId, pwd) {
     const credential = new Credential({ userId, pwd });
@@ -22,15 +21,33 @@ class BlacklistCredentialsService {
   }
 
   /**
-   * Adds or updates document in blacklist-credentials DB. If the document already exists timestamp
-   * is updated. This can be used to block credential only for a certain amount of time after
-   * last unsuccessful access.
+   * Adds credential to blacklist-credentials DB. Credentially usually is the one that
+   * has been returned by checkBlacklisted(). In case credential initially is not
+   * blacklisted but 401 is received from backend the available credential can be
+   * passed in directly.
    * @param {Credential} credential Add or update document to/in blacklist-credentials DB.
-   * @throws {Error}
+   * @returns {Promise<Object|Error>}
    */
   async blacklist(credential) {
-    await this.blacklistCredentialsDb.insertDocument(credential);
+    return this.blacklistCredentialsDb.insertDocument(credential);
+  }
+
+  /**
+   * Delists a credential. In case of success or if credential is not blacklisted method
+   * returns resolved promise. Otherwise it will return a rejected promise.
+   * @param {String} userId User to delist.
+   * @param {String} pwd Password to delist.
+   * @returns {Promise<*|Error>} Resolves in case of success; value is not of any use.
+   */
+  async delist(userId, pwd) {
+    let resolver;
+    const credential = new Credential({ userId, pwd });
+    const doc = await this.blacklistCredentialsDb.get(credential);
+    if (doc.isBlacklisted) {
+      resolver = await this.blacklistCredentialsDb.destroy(doc);
+    }
+    return resolver;
   }
 }
 
-module.exports = BlacklistCredentialsService;
+module.exports = BlacklistService;

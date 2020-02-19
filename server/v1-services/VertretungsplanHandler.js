@@ -9,6 +9,7 @@ const PushEventEmitter = require('../functional-services/PushEventEmitter');
 const Config = require('../core-services/Config');
 const BasicAuthProvider = require('../providers/BasicAuthProvider');
 const SubstitionScheduleHashesDb = require('../providers/SubstitutionScheduleHashesDb');
+const BlacklistService = require('../functional-services/BlacklistService');
 
 const vertretungsplanURL = 'https://pius-gymnasium.de/vertretungsplan/';
 
@@ -174,6 +175,7 @@ class VertretungsplanHandler {
     this.request = request;
     this.version = version;
     this.vertretungsplan = new Vertretungsplan();
+    this.blacklistService = new BlacklistService();
   }
 
   /**
@@ -293,6 +295,51 @@ class VertretungsplanHandler {
   }
 
   /**
+   * Transforms reply data received from backend into JSON that is accepted by PiusApp and sends
+   * result on res object. When a transformation error occurs HTTP status 500 is sent.
+   * @param {Object} data Response data from backend; HTML that is to be transformed into JSON and then sent
+   * @param {IncomingMessage} req Express request message object
+   * @param {ServerResponse} res Express response object
+   * @private
+   */
+  transformAndSend(data, req, res) {
+    try {
+      const strData = data.toString();
+      const json = Html2Json(strData);
+      this.transform(json);
+      this.vertretungsplan.filter(req.query.forGrade || allValidGradesPattern);
+      const currentDigest = this.vertretungsplan.md5;
+
+      this.logService.logger.debug(`VertretungsplanHandler: Digest check: Grade ${req.query.forGrade || 'none'}, Ref digest ${req.query.digest || 'none'}, Current digest ${currentDigest}`);
+
+      if (process.env.DIGEST_CHECK === 'true' && currentDigest === req.query.digest) {
+        this.logService.logger.debug('VertretungsplanHandler: Sending HTTP status code 304');
+        res.status(304).end();
+      } else {
+        this.logService.logger.debug('VertretungsplanHandler: Sending HTTP status code 200');
+        this.vertretungsplan.digest = currentDigest;
+        res
+          .status(200)
+          .send(this.vertretungsplan);
+      }
+    } catch (err) {
+      this.logService.logger.error(`VertretungsplanHandler: Error when transforming substitution schedule: ${err}`);
+      res.status(500).end();
+    }
+  }
+
+  /**
+   * Get username and password from basic authentication header.
+   * @param {IncomingMessage} req Express request
+   * @returns {Array<String>} Return 2-dimensional array with username and password
+   * @private
+   */
+  authDataFromReq(req) {
+    const b64auth = (req.header('authorization') || '').split(' ')[1] || '';
+    return Buffer.from(b64auth, 'base64').toString().split(':');
+  }
+
+  /**
    * Process one request on /vertretungsplan. The method supports filtering by a certain
    * grade which needs to be passed in forGrade parameter. It also supports client side
    * caching. For this it computes an MD5 value for the result returned. Clients may pass
@@ -303,17 +350,25 @@ class VertretungsplanHandler {
    * to Pius HTTP server for validation. The method itself does not know about correct
    * username and password. If authentication fails as usual client will receive a 401
    * status code.
-   * @param {IncomingMessage} req - HTTP request
-   * @param {ServerResponse} res - Response object
+   * @param {IncomingMessage} req HTTP request
+   * @param {ServerResponse} res Response object
    */
-  process(req, res) {
-    // Hack: Make sure that new logins are being used.
-    const b64auth = (req.headers.authorization || '').split(' ')[1] || '';
-    const [username, password] = Buffer.from(b64auth, 'base64').toString().split(':');
+  async process(req, res) {
+    const [username, password] = this.authDataFromReq(req);
+    let credential;
 
-    if (username === 'Papst' && password === 'PiusX') {
-      this.logService.logger.info('VertretungsplanHandler: Old credentials detected when requesting /vertretungsplan! Sending immediate 401.');
-      res.status(401).end();
+    // With personal logins these will become invalid one day. To avoid blocking of middleware by backend
+    // check if current credentials are blacklisted. If so send immediate 401.
+    try {
+      credential = await this.blacklistService.checkBlacklisted(username, password);
+      if (credential.isBlacklisted) {
+        this.logService.logger.info('VertretungsplanHandler: Substitution schedule requested with blacklisted credentials. Sending immediate 401');
+        res.status(401).end();
+        return;
+      }
+    } catch (err) {
+      this.logService.logger.error(`VertretungsplanHandler: Blacklist check failed: ${err}`);
+      res.status(500).end();
       return;
     }
 
@@ -322,36 +377,35 @@ class VertretungsplanHandler {
       headers: {
         Authorization: req.header('authorization'),
       },
-    }, (error, response, data) => {
+    }, async (error, response, data) => {
       if (error) {
         this.logService.logger.error(`VertretungsplanHandler: Failed to load substition schedule: ${error}`);
         res.status(503).end();
-      } else if (response.statusCode === 200) {
-        try {
-          const strData = data.toString();
-          const json = Html2Json(strData);
-          this.transform(json);
-          this.vertretungsplan.filter(req.query.forGrade || allValidGradesPattern);
+        return;
+      }
 
-          const currentDigest = this.vertretungsplan.md5;
-          this.logService.logger.debug(`VertretungsplanHandler: Digest check: Grade ${req.query.forGrade || 'none'}, Ref digest ${req.query.digest || 'none'}, Current digest ${currentDigest}`);
-
-          if (process.env.DIGEST_CHECK === 'true' && currentDigest === req.query.digest) {
-            this.logService.logger.debug('VertretungsplanHandler: Sending HTTP status code 304');
-            res.status(304).end();
-          } else {
-            this.logService.logger.debug(`VertretungsplanHandler: Sending HTTP status code ${response.statusCode}`);
-            this.vertretungsplan.digest = currentDigest;
-            res
-              .status(response.statusCode)
-              .send(this.vertretungsplan);
-          }
-        } catch (err) {
-          this.logService.logger.error(`VertretungsplanHandler: Error when transforming substitution schedule: ${err}`);
-          res.status(500).end();
+      switch (response.statusCode) {
+        case 200: {
+          this.transformAndSend(data, req, res);
+          break;
         }
-      } else {
-        res.status(response.statusCode).end();
+
+        case 401:
+        case 403: {
+          try {
+            this.logService.logger.debug(`VertretungsplanHandler: Will blacklist credentials with SHA1 ${credential.id}`);
+            await this.blacklistService.blacklist(credential);
+            res.status(response.statusCode).end();
+          } catch (err) {
+            this.logService.logger.error(`Blacklisting of SHA1 ${credential.id} failed: ${err}`);
+            res.status(500).end();
+          }
+          break;
+        }
+
+        default: {
+          res.status(response.statusCode).end();
+        }
       }
     });
   }
@@ -423,12 +477,21 @@ class VertretungsplanHandler {
    * The method validates login information that is given as basic authentication data.
    * The data is checked by sending a HEAD request to Pius web site for URL /vertretungsplan.
    * The HTTP status code simply is returned to App.
-   * @param {IncomingMessage} req - HTTP request object
-   * @param {ServerResponse} res - Server response object
+   * @param {IncomingMessage} req HTTP request object
+   * @param {ServerResponse} res Server response object
    */
   async validateLogin(req, res) {
     try {
       const statusCode = await VertretungsplanHelper.validateLogin(req);
+
+      if (statusCode === 200) {
+        // Undo blacklisting in case of success. By this an eventually blacklisted
+        // credential can be unlocked.
+        const [username, password] = this.authDataFromReq(req);
+        this.logService.logger.debug(`VertretungsplanHandler: validateLogin will try to delist login for user ${username}.`);
+        await this.blacklistService.delist(username, password);
+      }
+
       res.status(statusCode).end();
     } catch (err) {
       this.logService.logger.warn(`VertretungsplanHandler: Could not validate login: ${err}`);
