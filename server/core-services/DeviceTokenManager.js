@@ -3,14 +3,20 @@ const CloudantDb = require('./CloudantDb');
 const LogService = require('../helper/LogService');
 const Config = require('./Config');
 const VertretungsplanHelper = require('../helper/VertretungsplanHelper');
+const BlacklistService = require('../functional-services/BlacklistService');
 
 /**
  * Manages registered device tokens from Android and iOS devices.
  */
 class DeviceTokenManager {
-  constructor() {
+  constructor(version = 'v1') {
+    this.version = version;
     this.logService = new LogService();
     this.deviceTokensDb = new CloudantDb('device-tokens', true);
+
+    if (this.version === 'v2') {
+      this.blacklistService = new BlacklistService();
+    }
   }
 
   /**
@@ -18,16 +24,27 @@ class DeviceTokenManager {
    * executed.
    * @param {String} grade Grade given with incoming register request.
    * @param {String} courseList Course list given with incoming register request.
-   * @returns {Boolean} true if registration is possible, false otherwise.
+   * @param {String} credential SHA1 hash of login credential (as of version v2)
+   * @returns {Promise<Boolean|Error>} true if registration is possible, false otherwise.
    * @private
    */
-  canRegister(grade, courseList) {
-    const result =
-      // No grade given?
+  async canRegister(grade, courseList, credential) {
+    let result = true;
+
+    // v2 API version requires also credential to be set.
+    // Starting from iOS app version 3.1 and Android version 1.4.2 this
+    // API is being used.
+    if (this.version === 'v2') {
+      result = !!(credential) && credential.length > 0;
+      result = result && !(await this.blacklistService.isBlacklisted(credential));
+    }
+
+    result = result && (
+      // Grade given?
       (grade && !VertretungsplanHelper.isUpperGrade(grade) && grade.length > 0) ||
-      // Upper grade but no course list?
+      // Upper grade then course list must bet set?
       (VertretungsplanHelper.isUpperGrade(grade) &&
-        (courseList && courseList.length > 0));
+        (courseList && courseList.length > 0)));
 
     return result;
   }
@@ -58,13 +75,13 @@ class DeviceTokenManager {
    * @param {IncomingMessage} req
    * @param {ServerResponse} res
    */
-  registerDeviceToken(req, res) {
+  async registerDeviceToken(req, res) {
     if (sha1(req.body.apiKey) !== Config.apiKey) {
       res.status(401).end();
       return;
     }
 
-    const { deviceToken, grade, courseList: _courseList = [], messagingProvider = 'apn', version = '' } = req.body;
+    const { deviceToken, grade, courseList: _courseList = [], messagingProvider = 'apn', version = '', credential } = req.body;
 
     // Workaround for JSON creation error on Android. courseList is not sent as JSON array
     // but as string.
@@ -80,28 +97,33 @@ class DeviceTokenManager {
       courseList = _courseList || [];
     }
 
-    // Check if this token can be registered. If not and token exists then it will be deleted.
-    // If deletion fails this error is logged but device receives status 200 anyway. There
-    // it not much that can be done when deletion fails.
-    if (this.canRegister(grade, courseList)) {
-      this.logService.logger.info(`Updating device token ${deviceToken} for messaging provider ${messagingProvider} with grade ${grade} and course list [${courseList}]`);
+    try {
+      // Check if this token can be registered. If not and token exists then it will be deleted.
+      // If deletion fails this error is logged but device receives status 200 anyway. There
+      // it not much that can be done when deletion fails.
+      if (await this.canRegister(grade, courseList, credential)) {
+        this.logService.logger.info(`Updating device token ${deviceToken} for messaging provider ${messagingProvider} with grade ${grade} and course list [${courseList}]`);
 
-      this.deviceTokensDb.get(deviceToken)
-        .then(document => Object.assign(document, { _id: deviceToken, grade, courseList, messagingProvider, version }))
-        .then(newDocument => this.deviceTokensDb.insertDocument(newDocument))
-        .then(() => res.status(200).end())
-        .catch(err => {
-          this.logService.logger.error(`Upserting device token ${deviceToken} failed: ${err}`);
-          res.status(500).end();
-        });
-    } else {
-      this.logService.logger.info(`Cannot register device token ${deviceToken} due to incomplete data. Existing token will be deleted.`);
-      this.deleteDeviceToken(deviceToken)
-        .then(() => res.status(200).end())
-        .catch(err => {
-          this.logService.logger.error(`Deleting device token ${deviceToken} failed: ${err}`);
-          res.status(500).end();
-        });
+        this.deviceTokensDb.get(deviceToken)
+          .then(document => Object.assign(document, { _id: deviceToken, grade, courseList, messagingProvider, version, credential }))
+          .then(newDocument => this.deviceTokensDb.insertDocument(newDocument))
+          .then(() => res.status(200).end())
+          .catch(err => {
+            this.logService.logger.error(`Upserting device token ${deviceToken} failed: ${err}`);
+            res.status(500).end();
+          });
+      } else {
+        this.logService.logger.info(`Cannot register device token ${deviceToken} due to incomplete data or blacklisting. If token exists it will be deleted.`);
+        this.deleteDeviceToken(deviceToken)
+          .then(() => res.status(200).end())
+          .catch(err => {
+            this.logService.logger.error(`Deleting device token ${deviceToken} failed: ${err}`);
+            res.status(500).end();
+          });
+      }
+    } catch (err) {
+      this.logService.logger.error(`Error in registration process for token ${deviceToken}: ${err}`);
+      res.status(500).end();
     }
   }
 

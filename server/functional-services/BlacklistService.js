@@ -5,7 +5,7 @@ const { Credential, BlacklistedCredentialsDb } = require('../providers/Blacklist
  */
 class BlacklistService {
   constructor() {
-    this.blacklistCredentialsDb = new BlacklistedCredentialsDb();
+    this.blacklistedCredentialsDb = new BlacklistedCredentialsDb();
   }
 
   /**
@@ -15,21 +15,30 @@ class BlacklistService {
    * @param {String} pwd Password of user to check for blacklisting.
    * @returns {Promise<Credential|Error>} When blacklisted document from blacklist-credentials DB
    */
-  async checkBlacklisted(userId, pwd) {
+  async getCredential(userId, pwd) {
     const credential = new Credential({ userId, pwd });
-    return this.blacklistCredentialsDb.get(credential);
+    return this.blacklistedCredentialsDb.get(credential);
+  }
+
+  /**
+   * Checks if credential is blacklisted.
+   * @param {String} credential to check for blacklisting
+   * @returns {Promise<Boolean|Error>} Resolves to true when blacklisted.
+   */
+  async isBlacklisted(credential) {
+    return (await this.blacklistedCredentialsDb.get(credential)).isBlacklisted;
   }
 
   /**
    * Adds credential to blacklist-credentials DB. Credentially usually is the one that
-   * has been returned by checkBlacklisted(). In case credential initially is not
+   * has been returned by getCredential(). In case credential initially is not
    * blacklisted but 401 is received from backend the available credential can be
    * passed in directly.
    * @param {Credential} credential Add or update document to/in blacklist-credentials DB.
    * @returns {Promise<Object|Error>}
    */
   async blacklist(credential) {
-    return this.blacklistCredentialsDb.insertDocument(credential);
+    return this.blacklistedCredentialsDb.insertDocument(credential);
   }
 
   /**
@@ -42,9 +51,9 @@ class BlacklistService {
   async delist(userId, pwd) {
     let resolver;
     const credential = new Credential({ userId, pwd });
-    const doc = await this.blacklistCredentialsDb.get(credential);
+    const doc = await this.blacklistedCredentialsDb.get(credential);
     if (doc.isBlacklisted) {
-      resolver = await this.blacklistCredentialsDb.destroy(doc);
+      resolver = await this.blacklistedCredentialsDb.destroy(doc);
     }
     return resolver;
   }

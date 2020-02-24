@@ -360,7 +360,7 @@ class VertretungsplanHandler {
     // With personal logins these will become invalid one day. To avoid blocking of middleware by backend
     // check if current credentials are blacklisted. If so send immediate 401.
     try {
-      credential = await this.blacklistService.checkBlacklisted(username, password);
+      credential = await this.blacklistService.getCredential(username, password);
       if (credential.isBlacklisted) {
         this.logService.logger.info('VertretungsplanHandler: Substitution schedule requested with blacklisted credentials. Sending immediate 401');
         res.status(401).end();

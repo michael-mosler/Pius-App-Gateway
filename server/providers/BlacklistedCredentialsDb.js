@@ -44,14 +44,21 @@ class BlacklistedCredentialsDb extends CloudantDb {
 
   /**
    * Gets document with id from the given input document.
-   * @param {Credentials} credential Document which has at least id property set.
-   * @returns {Credentials} Document from DB for given input document id. Use isBlacklisted property to check for actual blacklisting.
-   * @throws {Error} Please note that data not found is not an error!
+   * @param {Credential|String} credential Document which has at least id property set.
+   * @returns {Promise<Credential|Error>} Document from DB for given input document id. Use isBlacklisted property to check for actual blacklisting.
    */
   async get(credential) {
-    const _doc = await super.get(credential.id);
-    Object.assign(credential, _doc);
-    return new Credential({ doc: credential });
+    if (typeof credential === 'string') {
+      // Get credential with input string.
+      const _doc = await super.get(credential);
+      return new Credential({ doc: _doc });
+    } else if (typeof credential === 'object' && credential.constructor.name === 'Credential') {
+      // Get credential from object.
+      const _doc = await super.get(credential.id);
+      return new Credential({ doc: _doc });
+    } else {
+      throw new Error('unexpected type or class');
+    }
   }
 }
 

@@ -43,7 +43,7 @@ describe('BlacklistedCredentialsDb', () => {
 
   afterEach(() => td.reset());
 
-  it('should get Credentials', async () => {
+  it('should get Credentials with input object', async () => {
     const request = new Credential({ userId: 'user', pwd: 'pwd' });
     const date = new Date();
     const replyDoc = {
@@ -59,6 +59,28 @@ describe('BlacklistedCredentialsDb', () => {
     const blacklistedCredentialsDb = new BlacklistedCredentialsDb();
 
     const realResultDoc = await blacklistedCredentialsDb.get(request);
+    expect(realResultDoc.constructor.name).toEqual('Credential');
+    expect(realResultDoc.id).toEqual(replyDoc._id);
+    expect(realResultDoc.rev).toEqual(replyDoc._rev);
+    expect(realResultDoc.timestamp).toEqual(date);
+    expect(realResultDoc.isBlacklisted).toBeTruthy();
+  });
+
+  it('should get Credentials with input string', async () => {
+    const date = new Date();
+    const replyDoc = {
+      _id: 'sha1',
+      _rev: 'rev',
+      timestamp: date,
+    };
+
+    td.when(CloudantDb.prototype.get('sha1'))
+      .thenResolve(replyDoc);
+
+    const { BlacklistedCredentialsDb } = require('../../server/providers/BlacklistedCredentialsDb');
+    const blacklistedCredentialsDb = new BlacklistedCredentialsDb();
+
+    const realResultDoc = await blacklistedCredentialsDb.get('sha1');
     expect(realResultDoc.constructor.name).toEqual('Credential');
     expect(realResultDoc.id).toEqual(replyDoc._id);
     expect(realResultDoc.rev).toEqual(replyDoc._rev);

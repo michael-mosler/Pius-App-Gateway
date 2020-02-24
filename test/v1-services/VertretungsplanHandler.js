@@ -33,7 +33,7 @@ describe('VertretungsplanHandler', () => {
   it('should reject on blacklisted with 401', (done) => {
     const credential = td.object();
     credential.isBlacklisted = true;
-    td.when(BlacklistService.prototype.checkBlacklisted('userId', 'pwd'))
+    td.when(BlacklistService.prototype.getCredential('userId', 'pwd'))
       .thenReturn(credential);
 
     const VertretungsplanHandler = require('../../server/v1-services/VertretungsplanHandler');
@@ -50,7 +50,7 @@ describe('VertretungsplanHandler', () => {
   });
 
   it('should reject on blacklist check error with 500', (done) => {
-    td.when(BlacklistService.prototype.checkBlacklisted('userId', 'pwd'))
+    td.when(BlacklistService.prototype.getCredential('userId', 'pwd'))
       .thenThrow(new Error('intended error'));
 
     const VertretungsplanHandler = require('../../server/v1-services/VertretungsplanHandler');
@@ -69,7 +69,7 @@ describe('VertretungsplanHandler', () => {
   it('should blacklist invalid credentials/status 401', (done) => {
     const credential = td.object();
     credential.isBlacklisted = false;
-    td.when(BlacklistService.prototype.checkBlacklisted('userId', 'pwd'))
+    td.when(BlacklistService.prototype.getCredential('userId', 'pwd'))
       .thenReturn(credential);
     td.when(BlacklistService.prototype.blacklist(td.matchers.contains({ isBlacklisted: false })))
       .thenReturn(credential);
@@ -93,7 +93,7 @@ describe('VertretungsplanHandler', () => {
   it('should blacklist invalid credentials/status 403', (done) => {
     const credential = td.object();
     credential.isBlacklisted = false;
-    td.when(BlacklistService.prototype.checkBlacklisted('userId', 'pwd'))
+    td.when(BlacklistService.prototype.getCredential('userId', 'pwd'))
       .thenReturn(credential);
     td.when(BlacklistService.prototype.blacklist(td.matchers.contains({ isBlacklisted: false })))
       .thenReturn(credential);
@@ -117,7 +117,7 @@ describe('VertretungsplanHandler', () => {
   it('should pass through any other status error', (done) => {
     const credential = td.object();
     credential.isBlacklisted = false;
-    td.when(BlacklistService.prototype.checkBlacklisted('userId', 'pwd'))
+    td.when(BlacklistService.prototype.getCredential('userId', 'pwd'))
       .thenReturn(credential);
     td.when(BlacklistService.prototype.blacklist(td.matchers.contains({ isBlacklisted: false })))
       .thenReturn(credential);
@@ -141,7 +141,7 @@ describe('VertretungsplanHandler', () => {
   it('should return status 500 on blacklist error', (done) => {
     const credential = td.object();
     credential.isBlacklisted = false;
-    td.when(BlacklistService.prototype.checkBlacklisted('userId', 'pwd'))
+    td.when(BlacklistService.prototype.getCredential('userId', 'pwd'))
       .thenReturn(credential);
     td.when(BlacklistService.prototype.blacklist(td.matchers.contains({ isBlacklisted: false })))
       .thenThrow(new Error('intented error'));
@@ -165,7 +165,7 @@ describe('VertretungsplanHandler', () => {
   it('should transform and send on HTTP status 200', (done) => {
     const credential = td.object();
     credential.isBlacklisted = false;
-    td.when(BlacklistService.prototype.checkBlacklisted('userId', 'pwd'))
+    td.when(BlacklistService.prototype.getCredential('userId', 'pwd'))
       .thenReturn(credential);
     td.when(BlacklistService.prototype.blacklist(td.matchers.contains({ isBlacklisted: false })))
       .thenReturn(credential);

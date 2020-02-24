@@ -48,6 +48,7 @@ class App {
 
     this.evaService = new EvaService();
     this.deviceTokenManager = new DeviceTokenManager();
+    this.deviceTokenManagerV2 = new DeviceTokenManager('v2');
     this.router = this.initRouting();
     this.expressApp.use('/', this.router);
   }
@@ -224,6 +225,7 @@ class App {
 
     // Device Token Manager routes.
     router.post('/deviceToken', App.catchify((req, res) => this.deviceTokenManager.registerDeviceToken(req, res)));
+    router.post('/v2/deviceToken', App.catchify((req, res) => this.deviceTokenManagerV2.registerDeviceToken(req, res)));
 
     // All other stuff is forwarded to Pius website.
     router.get(/.*/, Proxy(this.config.piusBaseUrl, {
