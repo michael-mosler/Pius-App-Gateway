@@ -1,6 +1,7 @@
 const sha1 = require('sha1');
 const supertest = require('supertest');
 const td = require('testdouble');
+const expect = require('expect');
 const express = require('express');
 const VertretungsplanHelper = require('../../server/helper/VertretungsplanHelper');
 
@@ -276,6 +277,35 @@ describe('DeviceTokenManager', () => {
       })
       .expect(200)
       .end(err => done(err));
+  });
+
+  it('should get tokens by grade and credential', async () => {
+    td.when(CloudantDb.prototype.find({ selector: { grade: 'grade' } }))
+      .thenResolve({ _id: 1 });
+
+    const DeviceTokenManager = require('../../server/core-services/DeviceTokenManager');
+    const deviceTokenManager = new DeviceTokenManager();
+    let _ = await deviceTokenManager.getDeviceTokens({ forGrade: 'grade' });
+    expect(_).toEqual({ _id: 1 });
+
+    td.when(CloudantDb.prototype.find({ selector: { credential: 'credential' } }))
+      .thenResolve({ _id: 1 });
+    _ = await deviceTokenManager.getDeviceTokens({ forCredential: 'credential' });
+    expect(_).toEqual({ _id: 1 });
+
+    try {
+      await deviceTokenManager.getDeviceTokens();
+      expect(false).toBeTruthy();
+    } catch (err) {
+      expect(err).toBeDefined();
+    }
+
+    try {
+      await deviceTokenManager.getDeviceTokens({ forGrade: 'grade', forCredential: 'credential' });
+      expect(false).toBeTruthy();
+    } catch (err) {
+      expect(err).toBeDefined();
+    }
   });
 });
 

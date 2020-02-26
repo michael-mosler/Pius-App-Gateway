@@ -1,10 +1,13 @@
+const LogService = require('../helper/LogService');
 const { Credential, BlacklistedCredentialsDb } = require('../providers/BlacklistedCredentialsDb');
+const DeviceTokenManger = require('../core-services/DeviceTokenManager');
 
 /**
  * Implements all methods that are needed for blacklist management.
  */
 class BlacklistService {
   constructor() {
+    this.logService = new LogService();
     this.blacklistedCredentialsDb = new BlacklistedCredentialsDb();
   }
 
@@ -38,6 +41,16 @@ class BlacklistService {
    * @returns {Promise<Object|Error>}
    */
   async blacklist(credential) {
+    const deviceTokenManager = new DeviceTokenManger('v2');
+    const device = await deviceTokenManager.getDeviceTokens({ forCredential: credential.id });
+
+    if (device.docs.length === 1) {
+      this.logService.logger.info(`BlacklistService: Will delete token ${device.docs[0]._id} for credential ${credential.id}`);
+      await deviceTokenManager.destroy(device.docs[0]);
+    } else if (device.docs.length > 1) {
+      this.logService.logger.error(`BlacklistService: Credential is not distinctly assigned to one device. Will not delete affected device tokens. Credential: ${credential.id}`);
+    }
+
     return this.blacklistedCredentialsDb.insertDocument(credential);
   }
 

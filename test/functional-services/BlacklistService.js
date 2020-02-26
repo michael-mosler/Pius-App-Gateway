@@ -4,9 +4,21 @@ const td = require('testdouble');
 describe('BlacklistService', () => {
   let Credential;
   let BlacklistedCredentialsDb;
+  let DeviceTokenManager;
 
   beforeEach(() => {
+    const LogService = td.replace('../../server/helper/LogService');
+    LogService.prototype.logger = td.constructor();
+    LogService.prototype.logger = {
+      debug: td.function(),
+      info: td.function(),
+      warn: td.function(),
+      error: td.function(),
+    };
+
     const { Credential: Credential_, BlacklistedCredentialsDb: BlacklistedCredentialsDb_ } = td.replace('../../server/providers/BlacklistedCredentialsDb');
+    DeviceTokenManager = td.replace('../../server/core-services/DeviceTokenManager');
+    DeviceTokenManager.prototype.destroy = td.function();
     Credential = Credential_;
     BlacklistedCredentialsDb = BlacklistedCredentialsDb_;
   });
@@ -30,8 +42,13 @@ describe('BlacklistService', () => {
 
   it('should blacklist correctly', async () => {
     const credential = td.object(['id']);
+    credential.id = 'sha1';
+    td.when(DeviceTokenManager.prototype.getDeviceTokens({ forCredential: credential.id }))
+      .thenResolve({ docs: [credential] });
+    td.when(DeviceTokenManager.prototype.destroy(td.matchers.not(credential)))
+      .thenReject(new Error('unexpected value passed to destroy'));
     td.when(BlacklistedCredentialsDb.prototype.insertDocument(td.matchers.not(credential)))
-      .thenThrow(new Error('unexpected value passed to insertDocument'));
+      .thenReject(new Error('unexpected value passed to insertDocument'));
 
     const BlacklistService = require('../../server/functional-services/BlacklistService');
     const blacklistService = new BlacklistService();
@@ -39,7 +56,27 @@ describe('BlacklistService', () => {
     try {
       await blacklistService.blacklist(credential);
     } catch (err) {
-      expect(false).toBeTruthy();
+      expect(err).toBeUndefined();
+    }
+  });
+
+  it('should blacklist correctly but refuse to delete non-unique credential', async () => {
+    const credential = td.object(['id']);
+    credential.id = 'sha1';
+    td.when(DeviceTokenManager.prototype.getDeviceTokens({ forCredential: credential.id }))
+      .thenResolve({ docs: [credential, credential] });
+    td.when(DeviceTokenManager.prototype.destroy(credential))
+      .thenReject(new Error('unexpected call to destroy'));
+    td.when(BlacklistedCredentialsDb.prototype.insertDocument(td.matchers.not(credential)))
+      .thenReject(new Error('unexpected value passed to insertDocument'));
+
+    const BlacklistService = require('../../server/functional-services/BlacklistService');
+    const blacklistService = new BlacklistService();
+
+    try {
+      await blacklistService.blacklist(credential);
+    } catch (err) {
+      expect(err).toBeUndefined();
     }
   });
 

@@ -7,12 +7,14 @@ const BlacklistService = require('../functional-services/BlacklistService');
 
 /**
  * Manages registered device tokens from Android and iOS devices.
+ * @property {Function} destroy Gives access to token db destroy function.
  */
 class DeviceTokenManager {
   constructor(version = 'v1') {
     this.version = version;
     this.logService = new LogService();
     this.deviceTokensDb = new CloudantDb('device-tokens', true);
+    this.destroy = this.deviceTokensDb.destroy;
 
     if (this.version === 'v2') {
       this.blacklistService = new BlacklistService();
@@ -132,8 +134,20 @@ class DeviceTokenManager {
    * @param {String} forGrade Grade for which token shall be returned.
    * @returns {Promise<Object|Error>} Resolves to a all matching documents from device-tokens DB.
    */
-  getDeviceTokens(forGrade) {
-    return this.deviceTokensDb.find({ selector: { grade: forGrade } });
+  async getDeviceTokens({ forGrade = null, forCredential = null }) {
+    if (forGrade && forCredential) {
+      throw new Error('DeviceTokenManager.getDeviceToken() must be called with only one of grade or credential');
+    }
+
+    if (forGrade) {
+      return this.deviceTokensDb.find({ selector: { grade: forGrade } });
+    }
+
+    if (forCredential) {
+      return this.deviceTokensDb.find({ selector: { credential: forCredential } });
+    }
+
+    throw new Error('DeviceTokenManager.getDeviceToken() must be called with at least one of grade or credential');
   }
 
   /**
