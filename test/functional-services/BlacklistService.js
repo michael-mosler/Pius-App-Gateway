@@ -117,19 +117,4 @@ describe('BlacklistService', () => {
     const _ = await blacklistService.delist('userId', 'pwd');
     expect(_).toBeUndefined();
   });
-
-  it('should give blacklisting indicator', async () => {
-    const credential = td.object(['id']);
-    td.when(Credential.prototype.constructor({ doc: 'sha1' }))
-      .thenReturn(credential);
-
-    td.when(BlacklistedCredentialsDb.prototype.get('sha1'))
-      .thenResolve(Object.assign(credential, { isBlacklisted: true }));
-
-    const BlacklistService = require('../../server/functional-services/BlacklistService');
-    const blacklistService = new BlacklistService();
-
-    const result = await blacklistService.isBlacklisted('sha1');
-    expect(result).toBeTruthy();
-  });
 });

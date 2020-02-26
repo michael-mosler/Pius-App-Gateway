@@ -3,7 +3,7 @@ const CloudantDb = require('./CloudantDb');
 const LogService = require('../helper/LogService');
 const Config = require('./Config');
 const VertretungsplanHelper = require('../helper/VertretungsplanHelper');
-const BlacklistService = require('../functional-services/BlacklistService');
+const { BlacklistedCredentialsDb } = require('../providers/BlacklistedCredentialsDb');
 
 /**
  * Manages registered device tokens from Android and iOS devices.
@@ -15,10 +15,17 @@ class DeviceTokenManager {
     this.logService = new LogService();
     this.deviceTokensDb = new CloudantDb('device-tokens', true);
     this.destroy = this.deviceTokensDb.destroy;
+    this.blacklistedCredentialsDb = new BlacklistedCredentialsDb();
+  }
 
-    if (this.version === 'v2') {
-      this.blacklistService = new BlacklistService();
-    }
+  /**
+   * Checks if credential is blacklisted.
+   * @param {String} credential to check for blacklisting
+   * @returns {Promise<Boolean|Error>} Resolves to true when blacklisted.
+   * @private
+   */
+  async isBlacklisted(credential) {
+    return (await this.blacklistedCredentialsDb.get(credential)).isBlacklisted;
   }
 
   /**
@@ -38,7 +45,7 @@ class DeviceTokenManager {
     // API is being used.
     if (this.version === 'v2') {
       result = !!(credential) && credential.length > 0;
-      result = result && !(await this.blacklistService.isBlacklisted(credential));
+      result = result && !(await this.isBlacklisted(credential));
     }
 
     result = result && (

@@ -13,7 +13,7 @@ const LogService = require('../helper/LogService');
 class Credential {
   constructor({ userId = null, pwd = null, doc = null }) {
     const { _id, _rev, timestamp } = doc || { };
-    this._id = _id || sha1((userId || '<none>') + (pwd || '<none>'));
+    this._id = _id || ((userId && pwd) ? sha1(userId + pwd) : null);
     this._rev = _rev;
     this.timestamp = timestamp;
   }
@@ -53,8 +53,9 @@ class BlacklistedCredentialsDb extends CloudantDb {
       const _doc = await super.get(credential);
       return new Credential({ doc: _doc });
     } else if (typeof credential === 'object' && credential.constructor.name === 'Credential') {
-      // Get credential from object.
+      // Get credential from object. In case nothing is found make sure that our key is kept.
       const _doc = await super.get(credential.id);
+      Object.assign(_doc, { _id: credential.id });
       return new Credential({ doc: _doc });
     } else {
       throw new Error('unexpected type or class');

@@ -24,15 +24,6 @@ class BlacklistService {
   }
 
   /**
-   * Checks if credential is blacklisted.
-   * @param {String} credential to check for blacklisting
-   * @returns {Promise<Boolean|Error>} Resolves to true when blacklisted.
-   */
-  async isBlacklisted(credential) {
-    return (await this.blacklistedCredentialsDb.get(credential)).isBlacklisted;
-  }
-
-  /**
    * Adds credential to blacklist-credentials DB. Credentially usually is the one that
    * has been returned by getCredential(). In case credential initially is not
    * blacklisted but 401 is received from backend the available credential can be

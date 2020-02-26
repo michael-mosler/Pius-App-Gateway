@@ -67,12 +67,13 @@ describe('VertretungsplanHandler', () => {
   });
 
   it('should blacklist invalid credentials/status 401', (done) => {
-    const credential = td.object();
+    const credential = td.object(['id', 'isBlacklisted']);
+    credential.id = 'sha1';
     credential.isBlacklisted = false;
     td.when(BlacklistService.prototype.getCredential('userId', 'pwd'))
-      .thenReturn(credential);
-    td.when(BlacklistService.prototype.blacklist(td.matchers.contains({ isBlacklisted: false })))
-      .thenReturn(credential);
+      .thenResolve(credential);
+    td.when(BlacklistService.prototype.blacklist(td.matchers.not(credential)))
+      .thenReject(new Error('unexpected parameter in call to blacklist'));
 
     td.when(request.get(td.matchers.isA(String), td.matchers.isA(Object), td.callback))
       .thenCallback(null, { statusCode: 401 }, {});
@@ -91,12 +92,13 @@ describe('VertretungsplanHandler', () => {
   });
 
   it('should blacklist invalid credentials/status 403', (done) => {
-    const credential = td.object();
+    const credential = td.object(['id', 'isBlacklisted']);
+    credential.id = 'sha1';
     credential.isBlacklisted = false;
     td.when(BlacklistService.prototype.getCredential('userId', 'pwd'))
-      .thenReturn(credential);
-    td.when(BlacklistService.prototype.blacklist(td.matchers.contains({ isBlacklisted: false })))
-      .thenReturn(credential);
+      .thenResolve(credential);
+    td.when(BlacklistService.prototype.blacklist(td.matchers.not(credential)))
+      .thenReject(new Error('unexpected parameter in call to blacklist'));
 
     td.when(request.get(td.matchers.isA(String), td.matchers.isA(Object), td.callback))
       .thenCallback(null, { statusCode: 403 }, {});
@@ -118,9 +120,9 @@ describe('VertretungsplanHandler', () => {
     const credential = td.object();
     credential.isBlacklisted = false;
     td.when(BlacklistService.prototype.getCredential('userId', 'pwd'))
-      .thenReturn(credential);
+      .thenResolve(credential);
     td.when(BlacklistService.prototype.blacklist(td.matchers.contains({ isBlacklisted: false })))
-      .thenReturn(credential);
+      .thenResolve(credential);
 
     td.when(request.get(td.matchers.isA(String), td.matchers.isA(Object), td.callback))
       .thenCallback(null, { statusCode: 501 }, {});
@@ -142,9 +144,9 @@ describe('VertretungsplanHandler', () => {
     const credential = td.object();
     credential.isBlacklisted = false;
     td.when(BlacklistService.prototype.getCredential('userId', 'pwd'))
-      .thenReturn(credential);
+      .thenResolve(credential);
     td.when(BlacklistService.prototype.blacklist(td.matchers.contains({ isBlacklisted: false })))
-      .thenThrow(new Error('intented error'));
+      .thenReject(new Error('intented error'));
 
     td.when(request.get(td.matchers.isA(String), td.matchers.isA(Object), td.callback))
       .thenCallback(null, { statusCode: 401 }, {});

@@ -309,11 +309,16 @@ describe('DeviceTokenManager', () => {
   });
 });
 
+/*
+ * ******************************************
+ * Interface version 2 tests
+ * ******************************************
+ */
 describe('DeviceTokenManager v2', () => {
   let app;
   let Config;
   let CloudantDb;
-  let BlacklistService;
+  let BlacklistedCredentialsDb;
 
   beforeEach(() => {
     app = express();
@@ -332,7 +337,8 @@ describe('DeviceTokenManager v2', () => {
     Config.apiKey = sha1('apiKey');
 
     CloudantDb = td.replace('../../server/core-services/CloudantDb');
-    BlacklistService = td.replace('../../server/functional-services/BlacklistService');
+    const { BlacklistedCredentialsDb: _BlacklistedCredetialDb } = td.replace('../../server/providers/BlacklistedCredentialsDb');
+    BlacklistedCredentialsDb = _BlacklistedCredetialDb;
 
     td.replace(VertretungsplanHelper, 'isUpperGrade');
     td.when(VertretungsplanHelper.isUpperGrade('5A'))
@@ -344,6 +350,9 @@ describe('DeviceTokenManager v2', () => {
   afterEach(() => td.reset());
 
   it('v2: should register valid lower grade token', done => {
+    const credential = td.object(['id']);
+    credential.isBlacklisted = false;
+
     const thisGrade = '5A';
 
     td.when(CloudantDb.prototype.get('token'))
@@ -361,8 +370,8 @@ describe('DeviceTokenManager v2', () => {
 
     td.when(CloudantDb.prototype.destroy(td.matchers.anything()))
       .thenReject(new Error('Unexpected call to destroy()'));
-    td.when(BlacklistService.prototype.isBlacklisted('sha1'))
-      .thenResolve(false);
+    td.when(BlacklistedCredentialsDb.prototype.get('sha1'))
+      .thenResolve(credential);
 
     const DeviceTokenManager = require('../../server/core-services/DeviceTokenManager');
     const deviceTokenManager = new DeviceTokenManager('v2');
@@ -388,6 +397,9 @@ describe('DeviceTokenManager v2', () => {
   });
 
   it('v2: should register valid upper grade token', done => {
+    const credential = td.object(['id']);
+    credential.isBlacklisted = false;
+
     const thisGrade = 'Q1';
 
     td.when(CloudantDb.prototype.get('token'))
@@ -405,8 +417,8 @@ describe('DeviceTokenManager v2', () => {
 
     td.when(CloudantDb.prototype.destroy(td.matchers.anything()))
       .thenReject(new Error('Unexpected call to destroy()'));
-    td.when(BlacklistService.prototype.isBlacklisted('sha1'))
-      .thenResolve(false);
+    td.when(BlacklistedCredentialsDb.prototype.get('sha1'))
+      .thenResolve(credential);
 
     const DeviceTokenManager = require('../../server/core-services/DeviceTokenManager');
     const deviceTokenManager = new DeviceTokenManager('v2');
@@ -435,6 +447,9 @@ describe('DeviceTokenManager v2', () => {
   });
 
   it('v2: should delete invalid lower grade token', done => {
+    const credential = td.object(['id']);
+    credential.isBlacklisted = false;
+
     const thisGrade = '5A';
 
     td.when(CloudantDb.prototype.get('token'))
@@ -452,8 +467,8 @@ describe('DeviceTokenManager v2', () => {
 
     td.when(CloudantDb.prototype.destroy(td.matchers.anything()))
       .thenResolve();
-    td.when(BlacklistService.prototype.isBlacklisted('sha1'))
-      .thenResolve(false);
+    td.when(BlacklistedCredentialsDb.prototype.get('sha1'))
+      .thenResolve(credential);
 
     const DeviceTokenManager = require('../../server/core-services/DeviceTokenManager');
     const deviceTokenManager = new DeviceTokenManager('v2');
@@ -474,12 +489,16 @@ describe('DeviceTokenManager v2', () => {
         courseList: null,
         messagingProvider: 'apn',
         version: '1.0',
+        credential: 'sha1',
       })
       .expect(200)
       .end(err => done(err));
   });
 
   it('v2: should delete invalid upper grade token', done => {
+    const credential = td.object(['id']);
+    credential.isBlacklisted = false;
+
     const thisGrade = 'Q1';
 
     td.when(CloudantDb.prototype.get('token'))
@@ -489,15 +508,16 @@ describe('DeviceTokenManager v2', () => {
       _id: 'token',
       _rev: 'document-rev',
       grade: thisGrade,
-      courseList: ['M LK1'],
+      courseList: [],
       messagingProvider: 'apn',
       version: '1.0',
+      credential: 'sha1',
     })).thenReject(new Error('Unexpected call to insertDocument()'));
 
     td.when(CloudantDb.prototype.destroy(td.matchers.anything()))
       .thenResolve();
-    td.when(BlacklistService.prototype.isBlacklisted('sha1'))
-      .thenResolve(false);
+    td.when(BlacklistedCredentialsDb.prototype.get('sha1'))
+      .thenResolve(credential);
 
     const DeviceTokenManager = require('../../server/core-services/DeviceTokenManager');
     const deviceTokenManager = new DeviceTokenManager('v2');
@@ -518,12 +538,16 @@ describe('DeviceTokenManager v2', () => {
         courseList: [],
         messagingProvider: 'apn',
         version: '1.0',
+        credential: 'sha1',
       })
       .expect(200)
       .end(err => done(err));
   });
 
   it('v2: should not register blacklisted token', done => {
+    const credential = td.object(['id']);
+    credential.isBlacklisted = true;
+
     const thisGrade = 'Q1';
 
     td.when(CloudantDb.prototype.get('token'))
@@ -541,8 +565,8 @@ describe('DeviceTokenManager v2', () => {
 
     td.when(CloudantDb.prototype.destroy(td.matchers.anything()))
       .thenResolve();
-    td.when(BlacklistService.prototype.isBlacklisted('sha1'))
-      .thenResolve(true);
+    td.when(BlacklistedCredentialsDb.prototype.get('sha1'))
+      .thenResolve(credential);
 
     const DeviceTokenManager = require('../../server/core-services/DeviceTokenManager');
     const deviceTokenManager = new DeviceTokenManager('v2');
@@ -560,7 +584,7 @@ describe('DeviceTokenManager v2', () => {
         apiKey: 'apiKey',
         deviceToken: 'token',
         grade: thisGrade,
-        courseList: [],
+        courseList: ['M LK1'],
         messagingProvider: 'apn',
         version: '1.0',
         credential: 'sha1',
