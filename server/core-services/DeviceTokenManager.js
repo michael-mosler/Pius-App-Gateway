@@ -14,7 +14,7 @@ class DeviceTokenManager {
     this.version = version;
     this.logService = new LogService();
     this.deviceTokensDb = new CloudantDb('device-tokens', true);
-    this.destroy = this.deviceTokensDb.destroy;
+    this.destroy = this.deviceTokensDb.destroy.bind(this.deviceTokensDb);
     this.blacklistedCredentialsDb = new BlacklistedCredentialsDb();
   }
 
