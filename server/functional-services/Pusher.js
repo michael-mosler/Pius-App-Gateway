@@ -198,7 +198,7 @@ class Pusher {
   push(changeListItem) {
     this.logService.logger.info(`Pushing for ${changeListItem.grade}`);
 
-    this.deviceTokenManager.getDeviceTokens(changeListItem.grade)
+    this.deviceTokenManager.getDeviceTokens({ forGrade: changeListItem.grade })
       .then((device) => {
         if (device.docs.length > 0) {
           // For upper grades we need to send notifications per device.
