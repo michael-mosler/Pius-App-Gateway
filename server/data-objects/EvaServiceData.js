@@ -1,5 +1,5 @@
 const _ = require('underscore');
-const uuid = require('uuid/v1');
+const { v1: uuid } = require('uuid');
 const datetime = require('date-and-time');
 
 /**
@@ -104,15 +104,13 @@ class EvaDoc {
     // Found, is the new collection item equal to the already recorded one, i.e. are all eva items the same?
     // This true if |list1 intersect list2| === 0.
     const newEvaItems = newEvaCollectionItem.evaItems.map(item => ({ course: item.course, evaText: item.evaText }));
-    let diff1 = _.reject(
+    const diff1 = _.reject(
       evaCollectionItem.evaItems.map(item => ({ course: item.course, evaText: item.evaText })),
-      evaItem1 => _.find(newEvaItems, evaItem2 => evaItem1.course === evaItem2.course && evaItem1.evaText === evaItem2.evaText)
-    );
+      evaItem1 => _.find(newEvaItems, evaItem2 => evaItem1.course === evaItem2.course && evaItem1.evaText === evaItem2.evaText));
 
-    let diff2 = _.reject(
+    const diff2 = _.reject(
       newEvaItems.map(item => ({ course: item.course, evaText: item.evaText })),
-      evaItem1 => _.find(evaCollectionItem.evaItems, evaItem2 => evaItem1.course === evaItem2.course && evaItem1.evaText === evaItem2.evaText)
-    );
+      evaItem1 => _.find(evaCollectionItem.evaItems, evaItem2 => evaItem1.course === evaItem2.course && evaItem1.evaText === evaItem2.evaText));
 
     // Yes it is when difference of both eva item lists is empty.
     return diff1.length + diff2.length === 0;
