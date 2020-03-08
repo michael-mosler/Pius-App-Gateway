@@ -12,6 +12,8 @@ applications:
     SLACK_ENABLED: false
     CONSOLE_LOG_LEVEL: debug
     FILE_LOG_LEVEL: info
+    DB_LOG_LEVEL: info
+    DB_LOG_IN_DEV: true
   instances: 1
   memory: 128M
   routes:

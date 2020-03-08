@@ -42,7 +42,8 @@
     "url-parse": "^1.4.7",
     "uuid": "^7.0.2",
     "verror": "^1.10.0",
-    "winston": "^3.2.1"
+    "winston": "^3.2.1",
+    "winston-cloudant": "^2.1.6"
   },
   "scripts": {
     "start": "node server/server_app.js",

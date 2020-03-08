@@ -1,5 +1,6 @@
 const winston = require('winston');
 const { combine, timestamp, colorize, align, printf } = winston.format;
+const CloudantTransport = require('winston-cloudant');
 
 let self;
 
@@ -12,51 +13,32 @@ let self;
  * will be activated. Console loglevel is configurable. In
  * development only Console log will be added. Log level
  * again is configurable.
+ *
+ * @property {Object} logger Winston logger
  */
 class LogService {
   constructor() {
     if (!self) {
-      let transports;
-
-      const consoleLogLevel = process.env.CONSOLE_LOG_LEVEL || 'info';
-      const fileLogLevel = process.env.FILE_LOG_LEVEL || 'error';
-
-      if (process.env.NODE_ENV === 'production') {
-        transports = [
-          new winston.transports.Console({
-            level: consoleLogLevel,
-            format: combine(
-              printf(info => `${info.level}: ${info.message}`),
-            ),
-          }),
-          new winston.transports.File({
-            level: fileLogLevel,
-            format: combine(
-              timestamp(),
-              colorize(),
-              align(),
-              printf(info => `${info.timestamp} ${info.level}: ${info.message}`),
-            ),
-            filename: './logs/combined.log',
-          }),
-        ];
-      } else {
-        transports = [
-          new winston.transports.Console({
-            level: consoleLogLevel,
-            format: combine(
-              timestamp(),
-              colorize(),
-              align(),
-              printf(info => `${info.timestamp} ${info.level}: ${info.message}`),
-            ),
-          }),
-        ];
+      // We want to display application name as additional field in WinstonCloudant
+      // transport. Get it from VCAP_APPLICATION.
+      try {
+        const vcapApplication = JSON.parse(process.env.VCAP_APPLICATION);
+        const { application_name: applicationName } = vcapApplication;
+        this.applicationName = applicationName;
+      } catch (err) {
+        this.applicationName = 'unset';
       }
 
-      this.winston = winston.createLogger({
-        transports,
-      });
+      // There are different transports in production and develop.
+      // In develop we do not log to file as it does not make any
+      // sense when we can monitor console.
+      const transports = (process.env.NODE_ENV === 'production') ? LogService.productionTransports() : LogService.developmentTransports();
+
+      this.winston = winston.createLogger({ transports });
+      this.winston.debug = LogService.customizeLogFunction(this, this.winston.debug);
+      this.winston.info = LogService.customizeLogFunction(this, this.winston.info);
+      this.winston.warn = LogService.customizeLogFunction(this, this.winston.warn);
+      this.winston.error = LogService.customizeLogFunction(this, this.winston.error);
 
       self = this;
     }
@@ -66,6 +48,112 @@ class LogService {
 
   get logger() {
     return this.winston;
+  }
+
+  /**
+   * Create Winston production transports.
+   * @return {Array} Transports
+   * @private
+   */
+  static productionTransports() {
+    const consoleLogLevel = process.env.CONSOLE_LOG_LEVEL || 'info';
+    const fileLogLevel = process.env.FILE_LOG_LEVEL || 'error';
+    const dbLogLevel = process.env.DB_LOG_LEVEL || 'error';
+    const cloudantTransport = LogService.cloudantTransport(dbLogLevel);
+
+    const transports = [
+      new winston.transports.Console({
+        level: consoleLogLevel,
+        format: combine(
+          printf(info => `${info.level}: ${info.message}`),
+        ),
+      }),
+      new winston.transports.File({
+        level: fileLogLevel,
+        format: combine(
+          timestamp(),
+          colorize(),
+          align(),
+          printf(info => `${info.timestamp} ${info.level}: ${info.message}`),
+        ),
+        filename: './logs/combined.log',
+      }),
+    ];
+
+    // If cloudant transport was successfully created we
+    // must add it to our list of transports.
+    cloudantTransport && transports.push(cloudantTransport);
+    return transports;
+  }
+
+  /**
+   * Create Winston development transports.
+   * @return {Array} transports
+   * @private
+   */
+  static developmentTransports() {
+    const consoleLogLevel = process.env.CONSOLE_LOG_LEVEL || 'info';
+
+    const transports = [
+      new winston.transports.Console({
+        level: consoleLogLevel,
+        format: combine(
+          timestamp(),
+          colorize(),
+          align(),
+          printf(info => `${info.timestamp} ${info.level}: ${info.message}`),
+        ),
+      }),
+    ];
+
+    // For debugging purposes we also may enable logging to DB in dev. env.
+    if (process.env.DB_LOG_IN_DEV === 'true') {
+      const dbLogLevel = process.env.DB_LOG_LEVEL || 'error';
+      const cloudantTransport = LogService.cloudantTransport(dbLogLevel);
+      cloudantTransport && transports.push(cloudantTransport);
+    }
+
+    return transports;
+  }
+
+  /**
+   * Customize log function by adding custom fields.
+   * @param {LogService} self LogService instance for which log functions shall be customized
+   * @param {Function} f The function to customize
+   * @returns {Function}
+   * @private
+   */
+  static customizeLogFunction(self, f) {
+    return (message, fields = {}) => f(message, Object.assign(fields, { appName: self.applicationName }));
+  }
+
+  /**
+   * Try to create Cloudant transport. This may silently return null if transport cannot be
+   * created.
+   * @param {number} level Log level to use for transport
+   * @return {Object} Cloudant transport, may be null if transport creation is not possible.
+   * @private
+   */
+  static cloudantTransport(level) {
+    try {
+      // Try to get Cloudant credentials from VCAP_SERVICES
+      // and then extract apiKey and url as these are needed
+      // by Cloudant transport. Anyway, if this fails there
+      // is not much we can do. Obviously we cannot log.
+      // any error
+      const vcapServices = JSON.parse(process.env.VCAP_SERVICES);
+      const { cloudantNoSQLDB: [cloudantVCAP] } = vcapServices;
+      const { credentials: { apikey: apiKey, host } } = cloudantVCAP;
+
+      return new CloudantTransport({
+        level,
+        url: `https://${host}`,
+        iamApiKey: apiKey,
+        db: 'combined-log',
+      });
+    } catch (err) {
+      return null;
+    }
   }
 }
 
