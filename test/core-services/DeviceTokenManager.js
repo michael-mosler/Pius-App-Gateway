@@ -354,6 +354,7 @@ describe('DeviceTokenManager v2', () => {
     credential.isBlacklisted = false;
 
     const thisGrade = '5A';
+    const hash = 'sha1'.padStart(40, '0');
 
     td.when(CloudantDb.prototype.get('token'))
       .thenResolve({ _id: 'token', _rev: 'document-rev', grade: thisGrade });
@@ -365,12 +366,12 @@ describe('DeviceTokenManager v2', () => {
       courseList: [],
       messagingProvider: 'apn',
       version: '1.0',
-      credential: 'sha1',
+      credential: hash,
     }))).thenThrow(new Error('unexpected args to insertDocument'));
 
     td.when(CloudantDb.prototype.destroy(td.matchers.anything()))
       .thenReject(new Error('Unexpected call to destroy()'));
-    td.when(BlacklistedCredentialsDb.prototype.get('sha1'))
+    td.when(BlacklistedCredentialsDb.prototype.get(hash))
       .thenResolve(credential);
 
     const DeviceTokenManager = require('../../server/core-services/DeviceTokenManager');
@@ -401,6 +402,7 @@ describe('DeviceTokenManager v2', () => {
     credential.isBlacklisted = false;
 
     const thisGrade = 'Q1';
+    const hash = 'sha1'.padStart(40, '0');
 
     td.when(CloudantDb.prototype.get('token'))
       .thenResolve({ _id: 'token', _rev: 'document-rev', grade: thisGrade });
@@ -412,12 +414,12 @@ describe('DeviceTokenManager v2', () => {
       courseList: ['M LK1'],
       messagingProvider: 'apn',
       version: '1.0',
-      credential: 'sha1',
+      credential: hash,
     }))).thenResolve(new Error('Unexpected call to destroy()'));
 
     td.when(CloudantDb.prototype.destroy(td.matchers.anything()))
       .thenReject(new Error('Unexpected call to destroy()'));
-    td.when(BlacklistedCredentialsDb.prototype.get('sha1'))
+    td.when(BlacklistedCredentialsDb.prototype.get(hash))
       .thenResolve(credential);
 
     const DeviceTokenManager = require('../../server/core-services/DeviceTokenManager');
@@ -440,7 +442,7 @@ describe('DeviceTokenManager v2', () => {
         courseList: ['M LK1'],
         messagingProvider: 'apn',
         version: '1.0',
-        credential: 'sha1',
+        credential: hash,
       })
       .expect(200)
       .end(err => done(err));
@@ -451,6 +453,7 @@ describe('DeviceTokenManager v2', () => {
     credential.isBlacklisted = false;
 
     const thisGrade = '5A';
+    const hash = 'sha1'.padStart(40, '0');
 
     td.when(CloudantDb.prototype.get('token'))
       .thenResolve({ _id: 'token', _rev: 'document-rev', grade: thisGrade });
@@ -467,7 +470,7 @@ describe('DeviceTokenManager v2', () => {
 
     td.when(CloudantDb.prototype.destroy(td.matchers.anything()))
       .thenResolve();
-    td.when(BlacklistedCredentialsDb.prototype.get('sha1'))
+    td.when(BlacklistedCredentialsDb.prototype.get(hash))
       .thenResolve(credential);
 
     const DeviceTokenManager = require('../../server/core-services/DeviceTokenManager');
@@ -500,6 +503,7 @@ describe('DeviceTokenManager v2', () => {
     credential.isBlacklisted = false;
 
     const thisGrade = 'Q1';
+    const hash = 'sha1'.padStart(40, '0');
 
     td.when(CloudantDb.prototype.get('token'))
       .thenResolve({ _id: 'token', _rev: 'document-rev', grade: thisGrade });
@@ -511,12 +515,12 @@ describe('DeviceTokenManager v2', () => {
       courseList: [],
       messagingProvider: 'apn',
       version: '1.0',
-      credential: 'sha1',
+      credential: hash,
     })).thenReject(new Error('Unexpected call to insertDocument()'));
 
     td.when(CloudantDb.prototype.destroy(td.matchers.anything()))
       .thenResolve();
-    td.when(BlacklistedCredentialsDb.prototype.get('sha1'))
+    td.when(BlacklistedCredentialsDb.prototype.get(hash))
       .thenResolve(credential);
 
     const DeviceTokenManager = require('../../server/core-services/DeviceTokenManager');
@@ -549,6 +553,7 @@ describe('DeviceTokenManager v2', () => {
     credential.isBlacklisted = true;
 
     const thisGrade = 'Q1';
+    const hash = 'sha1'.padStart(40, '0');
 
     td.when(CloudantDb.prototype.get('token'))
       .thenResolve({ _id: 'token', _rev: 'document-rev', grade: thisGrade });
@@ -560,12 +565,12 @@ describe('DeviceTokenManager v2', () => {
       courseList: ['M LK1'],
       messagingProvider: 'apn',
       version: '1.0',
-      credential: 'sha1',
+      credential: hash,
     })).thenReject(new Error('Unexpected call to insertDocument()'));
 
     td.when(CloudantDb.prototype.destroy(td.matchers.anything()))
       .thenResolve();
-    td.when(BlacklistedCredentialsDb.prototype.get('sha1'))
+    td.when(BlacklistedCredentialsDb.prototype.get(hash))
       .thenResolve(credential);
 
     const DeviceTokenManager = require('../../server/core-services/DeviceTokenManager');

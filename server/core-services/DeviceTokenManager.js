@@ -15,7 +15,11 @@ class DeviceTokenManager {
     this.logService = new LogService();
     this.deviceTokensDb = new CloudantDb('device-tokens', true);
     this.destroy = this.deviceTokensDb.destroy.bind(this.deviceTokensDb);
-    this.blacklistedCredentialsDb = new BlacklistedCredentialsDb();
+
+    // BlacklistedCredentialsDb is used only in version 2 instances.
+    if (this.version === 'v2') {
+      this.blacklistedCredentialsDb = new BlacklistedCredentialsDb();
+    }
   }
 
   /**
@@ -90,7 +94,10 @@ class DeviceTokenManager {
       return;
     }
 
-    const { deviceToken, grade, courseList: _courseList = [], messagingProvider = 'apn', version = '', credential } = req.body;
+    const { deviceToken, grade, courseList: _courseList = [], messagingProvider = 'apn', version = '', credential: _credential } = req.body;
+
+    // Make sure that credential has length of 40 characters. Android by default omits leading 0s.
+    const credential = (_credential && _credential.length > 0) ? _credential.padStart(40, '0') : undefined;
 
     // Workaround for JSON creation error on Android. courseList is not sent as JSON array
     // but as string.
