@@ -13,7 +13,7 @@ const LogService = require('../helper/LogService');
 class Credential {
   constructor({ userId = null, pwd = null, doc = null }) {
     const { _id, _rev, timestamp } = doc || { };
-    this._id = _id || ((userId && pwd) ? sha1(userId + pwd) : null);
+    this._id = _id || ((userId && pwd) ? sha1(userId + pwd) : sha1('<<<null>>>'));
     this._rev = _rev;
     this.timestamp = timestamp;
   }

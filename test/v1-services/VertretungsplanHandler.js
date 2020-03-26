@@ -1,6 +1,7 @@
 const supertest = require('supertest');
 const td = require('testdouble');
 const express = require('express');
+const Config = require('../../server/core-services/Config');
 const VertretungsplanHelper = require('../../server/helper/VertretungsplanHelper');
 
 /*
@@ -11,6 +12,7 @@ describe('VertretungsplanHandler', () => {
   let app;
   let request;
   let BlacklistService;
+  let DebugSchedulesDb;
 
   beforeEach(() => {
     app = express();
@@ -25,6 +27,7 @@ describe('VertretungsplanHandler', () => {
     };
 
     request = td.replace('request');
+    DebugSchedulesDb = td.replace('../../server/providers/debug/DebugSchedulesDb');
     BlacklistService = td.replace('../../server/functional-services/BlacklistService.js');
   });
 
@@ -174,6 +177,39 @@ describe('VertretungsplanHandler', () => {
 
     td.when(request.get(td.matchers.isA(String), td.matchers.isA(Object), td.callback))
       .thenCallback(null, { statusCode: 200 }, { data: 'data' });
+
+    const VertretungsplanHandler = require('../../server/v1-services/VertretungsplanHandler');
+    VertretungsplanHandler.prototype.transformAndSend = td.function();
+    td.when(VertretungsplanHandler.prototype.transformAndSend(td.matchers.contains({ data: 'data' }), td.matchers.isA(Object), td.matchers.isA(Object)))
+      .thenDo((data, req, res) => {
+        res.status(200).end();
+      });
+
+    const vertretungsplanHandler = new VertretungsplanHandler('v2');
+
+    app.get('/v2/vertretungsplan', (req, res) => {
+      vertretungsplanHandler.process(req, res);
+    });
+
+    supertest.agent(app)
+      .get('/v2/vertretungsplan')
+      .auth('userId', 'pwd')
+      .expect(200, done);
+  });
+
+  it('should use debug-source on request', (done) => {
+    const config = new Config();
+    config.debugSchedulesDbDocId = 'doc-id';
+
+    const credential = td.object();
+    credential.isBlacklisted = false;
+    td.when(BlacklistService.prototype.getCredential('userId', 'pwd'))
+      .thenReturn(credential);
+    td.when(BlacklistService.prototype.blacklist(td.matchers.contains({ isBlacklisted: false })))
+      .thenReturn(credential);
+
+    td.when(DebugSchedulesDb.prototype.get('doc-id'))
+      .thenResolve({ body: { data: 'data' } });
 
     const VertretungsplanHandler = require('../../server/v1-services/VertretungsplanHandler');
     VertretungsplanHandler.prototype.transformAndSend = td.function();

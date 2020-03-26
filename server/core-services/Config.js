@@ -1,3 +1,5 @@
+const dateTime = require('date-and-time');
+
 let instance;
 
 /**
@@ -7,6 +9,8 @@ let instance;
  * @property {String[]} upperGrades - List of upper grades.
  * @property {Map} upsMap - User-provided-services credentials map.
  * @property {String} apiKey - SHA1 hash value of API key.
+ * @property {Date} simDate - Available in debug mode only, first date of substitution schedule will be set to this date.
+ * @property {String} debugSchedulesDbDocId - In debug mode the schedules doc to use
  */
 class Config {
   constructor() {
@@ -14,6 +18,11 @@ class Config {
       this.port = process.env.PORT || 3000;
       this.piusBaseUrl = 'https://pius-gymnasium.de';
       this.baseUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/`;
+
+      this.debug = {
+        simDate: null,
+        debugSchedulesDbDocId: undefined,
+      };
 
       instance = this;
     }
@@ -59,12 +68,49 @@ class Config {
   static get apiKey() {
     const { apikey } = Config.upsMap.get('self');
     return apikey;
-    // return 'heSXxSOvNcl8J4UB9$#TV9TUZ3zClbX$EyOQzKiqGWxRgonzSe';
   }
 
   static get monitorCredentials() {
     const { monitor } = Config.upsMap.get('self');
     return monitor;
+  }
+
+  /**
+   * Gets simulated date. In production environment this will return always null.
+   * @returns {Date}
+   */
+  get simDate() {
+    return this.debug.simDate;
+  }
+
+  /**
+   * Sets simulated date from given value whihc has format YYYYMMDD.
+   * {String} value - Date to set.
+   * @throws {Error} If value cannot be converted to Date.
+   */
+  set simDate(value) {
+    if (dateTime.isValid(value, 'YYYYMMDD')) {
+      this.debug.simDate = dateTime.parse(value, 'YYYYMMDD');
+    } else {
+      throw new Error('Invalid Date');
+    }
+  }
+
+  /**
+   * Gets the document id to use for reads from debug-schedules db. This
+   * setting is in effect only in dev. environments. When not set it
+   * is undefined.
+   */
+  get debugSchedulesDbDocId() {
+    return this.debug.debugSchedulesDbDocId;
+  }
+
+  /**
+   * Sets debug-schedules db document id to use.
+   * {String} value - Id to be used.
+   */
+  set debugSchedulesDbDocId(value) {
+    this.debug.debugSchedulesDbDocId = value;
   }
 }
 

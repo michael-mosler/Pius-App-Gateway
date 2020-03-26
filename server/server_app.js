@@ -1,3 +1,4 @@
+const util = require('util');
 const Helmet = require('helmet');
 const Compression = require('compression');
 const BodyParser = require('body-parser');
@@ -272,9 +273,28 @@ class App {
         const vertretungsplanHandler = new VertretungsplanHandler('v2');
         vertretungsplanHandler.checker();
 
-        res
-          .status(200)
-          .end();
+        res.status(200).end();
+      });
+
+      router.put('/debug', (req, res) => {
+        try {
+          this.logService.logger.debug(`PUT on /debug, setting options date to ${util.inspect(req.body)}`);
+          const config = new Config();
+          config.simDate = req.body.simDate;
+          config.debugSchedulesDbDocId = req.body.debugSchedulesDbDocId;
+          res.status(200).end();
+        } catch (err) {
+          this.logService.logger.error(`Failed to set debug options: ${err}`);
+          res.status(400).end();
+        }
+      });
+
+      router.delete('/debug', (req, res) => {
+        this.logService.logger.debug('DELETE on /debug');
+        const config = new Config();
+        config.simDate = null;
+        config.debugSchedulesDbDocId = undefined;
+        res.status(200).end();
       });
     }
 

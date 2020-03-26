@@ -3,11 +3,13 @@ const request = require('request');
 const Html2Json = require('html2json').html2json;
 const md5 = require('md5');
 const clone = require('clone');
+const dateTime = require('date-and-time');
 const LogService = require('../helper/LogService');
 const VertretungsplanHelper = require('../helper/VertretungsplanHelper');
 const PushEventEmitter = require('../functional-services/PushEventEmitter');
 const Config = require('../core-services/Config');
 const BasicAuthProvider = require('../providers/BasicAuthProvider');
+const DebugSchedulesDb = require('../providers/debug/DebugSchedulesDb');
 const SubstitionScheduleHashesDb = require('../providers/SubstitutionScheduleHashesDb');
 const BlacklistService = require('../functional-services/BlacklistService');
 
@@ -25,7 +27,6 @@ const allExistingGradesPattern = new RegExp('^((\\d[A-E])|(Q[12])|(EF)|(IK)|(VT)
 class VertretungsplanItem {
   constructor() {
     this.detailItems = [];
-    // this.vertretungsplan = new Vertretungsplan();
   }
 
   /**
@@ -156,6 +157,32 @@ class Vertretungsplan {
       date.gradeItems = date.gradeItems.filter(gradeItem => gradeItem.grade.match(pattern));
     });
   }
+
+  /**
+   * If a simDate is set in Config then substitution schedule dates are patched.
+   * The first date item gets simDate assigned. For all follow up items simDate
+   * increments by 1 day.
+   */
+  forSimDate() {
+    const config = new Config();
+
+    // If simDate has not been set nothing needs to be changed.
+    if (!config.simDate) {
+      return;
+    }
+
+    require('date-and-time/locale/de');
+    dateTime.locale('de');
+
+    // Iterate over all date items in schedule and patch dates.
+    // Start with simDate and increment by one day in each iteration.
+    const simDate = clone(config.simDate);
+    this.dateItems.forEach(dateItem => {
+      const d = dateTime.format(simDate, 'dddd, DD.MM.YYYY');
+      dateItem.title = d;
+      simDate.setDate(simDate.getDate() + 1);
+    });
+  }
 }
 
 /**
@@ -283,7 +310,7 @@ class VertretungsplanHandler {
 
         // ****************************************************************************************************
         // Check for new format as of March, 2nd 2019. Column "Aktueller Lehrer" is removed.
-        // This, total number of detail items is decreased by 1. To prevent app from crashing
+        // Thus, total number of detail items is decreased by 1. To prevent app from crashing
         // we need to add it as blank array item.
         const { currentDateItem: { currentGradeItem: { currentVertretungsplanItem } = {} } = {} } = this.vertretungsplan;
         if (index > -1 && currentVertretungsplanItem && currentVertretungsplanItem.hasNewDetailItemFormat) {
@@ -308,8 +335,12 @@ class VertretungsplanHandler {
       const json = Html2Json(strData);
       this.transform(json);
       this.vertretungsplan.filter(req.query.forGrade || allValidGradesPattern);
-      const currentDigest = this.vertretungsplan.md5;
 
+      // In dev environments date set in substiution schedule can be overwritten.
+      // This is quite usefull for debugging purposes in app development.
+      (process.env.NODE_ENV === 'dev') && this.vertretungsplan.forSimDate();
+
+      const currentDigest = this.vertretungsplan.md5;
       this.logService.logger.debug(`VertretungsplanHandler: Digest check: Grade ${req.query.forGrade || 'none'}, Ref digest ${req.query.digest || 'none'}, Current digest ${currentDigest}`);
 
       if (process.env.DIGEST_CHECK === 'true' && currentDigest === req.query.digest) {
@@ -337,6 +368,25 @@ class VertretungsplanHandler {
   authDataFromReq(req) {
     const b64auth = (req.header('authorization') || '').split(' ')[1] || '';
     return Buffer.from(b64auth, 'base64').toString().split(':');
+  }
+
+  /**
+   * Gets substitution schedule from backend or when in debug mode from debug-schedules DB.
+   * @param {String} fromUrl URL to read from in non-debug mode.
+   * @param {Object} options Request options, ignored in debug mode.
+   * @param {Function} cb Callback with signature (error, response, data)
+   * @private
+   */
+  get(fromUrl, options, cb) {
+    const config = new Config();
+    if (config.debugSchedulesDbDocId) {
+      const debugSchedulesDb = new DebugSchedulesDb();
+      debugSchedulesDb.get(config.debugSchedulesDbDocId)
+        .then(doc => cb(null, { statusCode: (doc.body) ? 200 : 404 }, doc.body))
+        .catch(err => cb(err, { statusCode: 500 }, null));
+    } else {
+      this.request.get(fromUrl, options, cb);
+    }
   }
 
   /**
@@ -373,7 +423,7 @@ class VertretungsplanHandler {
     }
 
     // noinspection JSUnresolvedFunction
-    this.request.get(vertretungsplanURL, {
+    this.get(vertretungsplanURL, {
       headers: {
         Authorization: req.header('authorization'),
       },

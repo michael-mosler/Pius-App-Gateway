@@ -1,4 +1,5 @@
 // const td = require('testdouble');
+const sha1 = require('sha1');
 const expect = require('expect');
 const td = require('testdouble');
 const { Credential } = require('../../server/providers/BlacklistedCredentialsDb');
@@ -23,6 +24,11 @@ describe('Credential', () => {
     expect(credential.rev).toEqual(doc._rev);
     expect(credential.timestamp).toEqual(doc.timestamp);
     expect(credential.isBlacklisted).toBeTruthy();
+  });
+
+  it('should handle null credentials', () => {
+    const credential = new Credential({ userId: '', pwd: null });
+    expect(credential.id).toEqual(sha1('<<<null>>>'));
   });
 });
 
