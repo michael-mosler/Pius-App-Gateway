@@ -1,5 +1,6 @@
 const util = require('util');
 const Helmet = require('helmet');
+const nocache = require('nocache');
 const Compression = require('compression');
 const BodyParser = require('body-parser');
 const CookieParser = require('cookie-parser');
@@ -8,9 +9,7 @@ const Proxy = require('express-http-proxy');
 const Cron = require('cron');
 const url = require('url');
 const sha1 = require('sha1');
-const auth = require('http-auth');
 const ExpressUseragent = require('express-useragent');
-const ExpressStatusMonitor = require('express-status-monitor');
 
 const LogService = require('./helper/LogService');
 const Config = require('./core-services/Config');
@@ -112,24 +111,7 @@ class App {
    */
   initMiddleware() {
     const expressApp = Express();
-
-    const basic =
-      auth.basic({
-        realm: 'Monitor Area',
-        msg401: 'Die Anmeldedaten sind ung&uuml;ltig.',
-        contentType: 'text/html',
-      }, (user, password, cb) => {
-        // eslint-disable-next-line standard/no-callback-literal
-        cb(user === Config.monitorCredentials.user && sha1(password) === Config.monitorCredentials.password);
-      });
-
     expressApp.use(ExpressUseragent.express());
-
-    const statusMonitor = ExpressStatusMonitor({ path: '' });
-    expressApp.use(statusMonitor.middleware);
-    expressApp.get('/status',
-      (req, res, next) => { basic.check((req, res) => { next(); })(req, res); },
-      statusMonitor.pageRoute);
 
     if (process.env.DIGEST_CHECK === 'true') {
       slackBot.post('Digest check is enabled.');
@@ -141,7 +123,8 @@ class App {
       expressApp.use(Compression());
     }
 
-    expressApp.use(Helmet({ noCache: true }));
+    expressApp.use(Helmet());
+    expressApp.use(nocache());
 
     // parse application/x-www-form-urlencoded
     expressApp.use(BodyParser.urlencoded({ extended: true }));

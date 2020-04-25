@@ -1,5 +1,4 @@
 const request = require('request');
-// noinspection JSUnresolvedVariable
 const Html2Json = require('html2json').html2json;
 const md5 = require('md5');
 const clone = require('clone');
