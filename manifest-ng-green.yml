@@ -21,6 +21,6 @@ applications:
     DIGEST_CHECK: true
     FILE_LOG_LEVEL: warn
     NODE_ENV: production
-    SLACK_ENABLED: false
+    SLACK_ENABLED: true
     START_PUSHER: true
   stack: cflinuxfs3
