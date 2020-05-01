@@ -14,12 +14,13 @@ applications:
   - self
   - slack
   env:
-    NODE_ENV: production
-    BASE_URL: https://pius-gateway.eu-de.mybluemix.net
-    START_PUSHER: true
     APN_PRODUCTION: true
+    BASE_URL: https://pius-gateway.eu-de.mybluemix.net
+    CLOUDANT_SERVICE_NAME: cloudantNoSQLDB
     COMPRESSION: true
     DIGEST_CHECK: true
-    SLACK_ENABLED: true
     FILE_LOG_LEVEL: warn
+    NODE_ENV: production
+    SLACK_ENABLED: false
+    START_PUSHER: true
   stack: cflinuxfs3

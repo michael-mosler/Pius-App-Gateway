@@ -1,7 +1,6 @@
 const cloudant = require('@cloudant/cloudant');
 const VError = require('verror');
-
-const LogService = require('../helper/LogService');
+const Config = require('./Config');
 
 /**
  * Cloudant  connection class. This class knows how to establish a physical connection to Cloudant.
@@ -11,10 +10,12 @@ const LogService = require('../helper/LogService');
  * drivers.
  * @property {String) dbURL - URL of Cloudant connection
  * @property {String) type - Type of connection: "Cloudant Connection"
+ * @property {String} host - Cloudant service host name
+ * @property {String} url - Cloudant service URL, includes credentials, aka basic auth. credentials
+ * @property {String} apiKey - Cloudant service API key
  */
 class CloudantConnection {
   constructor() {
-    this.logService = new LogService();
     this.instanceName = 'Cloudant';
     this.instanceOffering = 'Lite';
   }
@@ -30,12 +31,51 @@ class CloudantConnection {
   }
 
   /**
+   * Gets a named property from Cloudant VCAP credentials record.
+   * @param {String} property Property to get from VCAP record.
+   * @returns {String} Property value
+   * @throws {verror}
+   * @private
+   */
+  static getVcapProperty(property) {
+    try {
+      const cloudantVCAP = Config.cloudantVCAP;
+      const { credentials } = cloudantVCAP;
+      const value = credentials[property];
+      return value;
+    } catch (err) {
+      const verror = new VError({
+        name: 'Database Connection Config Error',
+        cause: err,
+        info: {
+          property,
+        },
+      }, `Could not get property ${property} from Cloudant VCAP data`);
+      throw verror;
+    }
+  }
+
+  static get host() {
+    return CloudantConnection.getVcapProperty('host');
+  }
+
+  static get url() {
+    return CloudantConnection.getVcapProperty('url');
+  }
+
+  static get apiKey() {
+    return CloudantConnection.getVcapProperty('apikey');
+  }
+
+  /**
    * Establish connection to a CloudantDB instance.
    * @returns {Object}
+   * @throws {verror}
    */
   connect() {
     try {
-      return cloudant({ instanceName: this.instanceName, vcapServices: JSON.parse(process.env.VCAP_SERVICES) });
+      const url = CloudantConnection.url;
+      return cloudant(url);
     } catch (err) {
       const verror = new VError({
         name: 'DatabaseConnectionError',
@@ -45,8 +85,6 @@ class CloudantConnection {
           instanceOffering: this.instanceOffering,
         },
       }, 'Failed to connect to CloudantDB');
-
-      this.logService.logger.error(`${verror}\n`);
       throw verror;
     }
   }

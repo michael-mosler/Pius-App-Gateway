@@ -5,15 +5,16 @@ applications:
   env:
     APN_PRODUCTION: false
     BASE_URL: https://pius-gateway-ng.eu-gb.mybluemix.net
-    NODE_ENV: dev
-    START_PUSHER: false
+    CLOUDANT_SERVICE_NAME: cloudantNoSQLDB
     COMPRESSION: true
-    DIGEST_CHECK: true
-    SLACK_ENABLED: false
     CONSOLE_LOG_LEVEL: debug
-    FILE_LOG_LEVEL: info
     DB_LOG_LEVEL: info
     DB_LOG_IN_DEV: true
+    DIGEST_CHECK: true
+    NODE_ENV: dev
+    FILE_LOG_LEVEL: info
+    SLACK_ENABLED: false
+    START_PUSHER: false
   instances: 1
   memory: 128M
   routes:

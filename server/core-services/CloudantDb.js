@@ -103,8 +103,7 @@ class CloudantDb {
         info: {
           dbName: this.name,
         },
-      }, `Failed to connect to databse ${this.name}`);
-
+      }, `Failed to connect to database ${this.name}`);
       throw verror;
     }
   }

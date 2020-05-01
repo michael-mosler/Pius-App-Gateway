@@ -8,6 +8,7 @@ let instance;
  * @property {String[]} grades - List of grades known to the app.
  * @property {String[]} upperGrades - List of upper grades.
  * @property {Map} upsMap - User-provided-services credentials map.
+ * @property {Object} cloudantVCAP - Cloudant VCAP information from VCAP_SERVICES.
  * @property {String} apiKey - SHA1 hash value of API key.
  * @property {Date} simDate - Available in debug mode only, first date of substitution schedule will be set to this date.
  * @property {String} debugSchedulesDbDocId - In debug mode the schedules doc to use
@@ -70,9 +71,11 @@ class Config {
     return apikey;
   }
 
-  static get monitorCredentials() {
-    const { monitor } = Config.upsMap.get('self');
-    return monitor;
+  static get cloudantVCAP() {
+    const cloudantServiceName = process.env.CLOUDANT_SERVICE_NAME;
+    const vcapServices = JSON.parse(process.env.VCAP_SERVICES);
+    const cloudantVCAPList = vcapServices[cloudantServiceName] || [];
+    return cloudantVCAPList[0];
   }
 
   /**

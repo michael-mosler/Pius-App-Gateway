@@ -1,6 +1,7 @@
 const winston = require('winston');
 const { combine, timestamp, colorize, align, printf } = winston.format;
 const CloudantTransport = require('winston-cloudant');
+const CloudantConnection = require('../core-services/CloudantConnection');
 
 let self;
 
@@ -136,22 +137,14 @@ class LogService {
    */
   static cloudantTransport(level) {
     try {
-      // Try to get Cloudant credentials from VCAP_SERVICES
-      // and then extract apiKey and url as these are needed
-      // by Cloudant transport. Anyway, if this fails there
-      // is not much we can do. Obviously we cannot log.
-      // any error
-      const vcapServices = JSON.parse(process.env.VCAP_SERVICES);
-      const { cloudantNoSQLDB: [cloudantVCAP] } = vcapServices;
-      const { credentials: { apikey: apiKey, host } } = cloudantVCAP;
-
       return new CloudantTransport({
         level,
-        url: `https://${host}`,
-        iamApiKey: apiKey,
+        url: `https://${CloudantConnection.host}`,
+        iamApiKey: CloudantConnection.apiKey,
         db: 'combined-log',
       });
     } catch (err) {
+      // There is not much we can do if we get an exception here.
       return null;
     }
   }
