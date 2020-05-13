@@ -5,6 +5,7 @@ const clone = require('clone');
 const dateTime = require('date-and-time');
 const LogService = require('../helper/LogService');
 const VertretungsplanHelper = require('../helper/VertretungsplanHelper');
+const Pusher = require('../functional-services/Pusher');
 const PushEventEmitter = require('../functional-services/PushEventEmitter');
 const Config = require('../core-services/Config');
 const BasicAuthProvider = require('../providers/BasicAuthProvider');
@@ -468,6 +469,9 @@ class VertretungsplanHandler {
    */
   checker() {
     this.logService.logger.info('VertretungsplanHandler: ##### Checking for new changes to push...');
+
+    // eslint-disable-next-line no-unused-vars
+    const pusher = new Pusher();
     const pushEventEmitter = new PushEventEmitter();
     const basicAuthProvider = new BasicAuthProvider();
 

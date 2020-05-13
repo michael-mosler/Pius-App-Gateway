@@ -19,7 +19,6 @@ const NewsReqHandlerV2 = require('./v2-services/NewsReqHandler');
 const VertretungsplanHandler = require('./v1-services/VertretungsplanHandler');
 const EvaRequestHandler = require('./v2-services/EvaRequestHandler');
 const CalendarHandler = require('./v1-services/CalendarHandler');
-const Pusher = require('./functional-services/Pusher');
 const EvaService = require('./functional-services/EvaService');
 const SlackBot = require('./core-services/SlackBot');
 const DeviceTokenManager = require('./core-services/DeviceTokenManager');
@@ -39,7 +38,6 @@ class App {
   constructor() {
     this.logService = new LogService();
     this.config = new Config();
-    this.pusher = null;
     this.pusherJobs = [];
     this.requestCache = null;
 
@@ -74,7 +72,6 @@ class App {
     this.requestCache = new RequestCache(process.env.TTL);
 
     // Initialise pusher.
-    this.pusher = new Pusher();
     this.createPusherJobs();
 
     if (process.env.START_PUSHER === 'true') {

@@ -1,7 +1,7 @@
 const Cheerio = require('cheerio');
 const UrlParse = require('url-parse');
 const md5 = require('md5');
-const request = require('request');
+const { HtmlLoader } = require('../core-services/HtmlLoader');
 const LogService = require('../helper/LogService');
 const Config = require('../core-services/Config');
 
@@ -20,48 +20,16 @@ class NewsItem {
   }
 }
 
-class RequestError extends Error {
-  constructor(message, statusCode) {
-    super(message);
-    this.statusCode = statusCode;
-  }
-}
-
 class NewsReqHandler {
   constructor() {
     if (!instance) {
       this.logService = new LogService();
       this.config = new Config();
-      this.request = request;
+      this.htmlLoader = new HtmlLoader(this.config.piusBaseUrl);
       instance = this;
     }
 
     return instance;
-  }
-
-  /**
-   * Load Pius Gymnasium Homepage and resolve promise with HTML document
-   * in case of success. In case of error rejects promise with HTTP status
-   * code.
-   * @returns {Promise}
-   * @private
-   */
-  loadHomePage() {
-    return new Promise((resolve, reject) => {
-      try {
-        this.request({ method: 'get', url: this.config.piusBaseUrl }, (error, response, data) => {
-          if (error) {
-            reject(new RequestError(`Failed to load news data: ${error}`, 503));
-          } else if (response.statusCode === 200) {
-            resolve(data);
-          } else {
-            reject(new RequestError('Loading news data returned HTTP status other than 200', response.statusCode));
-          }
-        });
-      } catch (err) {
-        reject(new RequestError(err, 503));
-      }
-    });
   }
 
   /**
@@ -72,7 +40,7 @@ class NewsReqHandler {
    */
   async getNewsFromHomePage(req, res) {
     try {
-      const data = await this.loadHomePage();
+      const data = await this.htmlLoader.load();
       const $ = Cheerio.load(data.toString());
 
       // Iterate on all Uber Grid cells
@@ -206,16 +174,6 @@ class NewsReqHandler {
         $(this).attr('src', uri);
       }
     });
-
-    /*
-    $('img').each(function () {
-      let uri = $(this).attr('src');
-      if (uri) {
-        uri = uri.replace(/^https?:\/\/pius-gymnasium.de\/?/, config.baseUrl);
-        $(this).attr('src', uri);
-      }
-    });
-    */
 
     $('link').each(function () {
       let uri = $(this).attr('href');
