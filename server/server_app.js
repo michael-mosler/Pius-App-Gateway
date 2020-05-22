@@ -23,6 +23,7 @@ const EvaService = require('./functional-services/EvaService');
 const SlackBot = require('./core-services/SlackBot');
 const DeviceTokenManager = require('./core-services/DeviceTokenManager');
 const RequestCache = require('./providers/RequestCache');
+const { StaffLoaderJob } = require('./functional-services/StaffLoaderJob');
 
 const slackBot = new SlackBot();
 
@@ -254,6 +255,17 @@ class App {
         vertretungsplanHandler.checker();
 
         res.status(200).end();
+      });
+
+      router.post('/staffLoader', async (req, res) => {
+        try {
+          this.logService.logger.info('POST on /staffLoader');
+          const staffLoaderJob = new StaffLoaderJob();
+          await staffLoaderJob.run();
+          res.status(200).end();
+        } catch (err) {
+          res.status(500).send(err);
+        }
       });
 
       router.put('/debug', (req, res) => {

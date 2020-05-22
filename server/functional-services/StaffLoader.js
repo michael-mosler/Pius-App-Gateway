@@ -18,6 +18,7 @@ class Employee {
 /**
  * All employees of the handled institution.
  * @property {Employee[]} employees - List of all employees.
+ * @property {Object} dictionary - Object with one nested object for each shortHandSymbol.
  */
 class Staff {
   constructor() {
@@ -35,6 +36,10 @@ class Staff {
     return dict;
   }
 
+  /**
+   * Adds employee to staff.
+   * @param {Employee} employee - Employee to add to staff list.
+   */
   add(employee) {
     this.employees.push(employee);
   }
@@ -60,7 +65,11 @@ class StaffLoader {
     const staff = new Staff();
 
     // Scan staff table.
-    const $ = Cheerio.load(data.toString());
+    const strData = data
+      .toString()
+      .replace(/<br\/?>/g, '\n');
+
+    const $ = Cheerio.load(strData);
     const table = $('#main > div.entry > table');
     table.find('tbody > tr').slice(3).each(function () {
       const siblings = [];
@@ -72,10 +81,8 @@ class StaffLoader {
       if (siblings.length > 1) {
         const [name, shortHandSymbol, subjectText] = siblings;
         const subjects = (subjectText || '')
-          .trim()
-          .replace(/ +/g, '')
-          .replace(/\n.*/g, '')
-          .split(',');
+          .split(',')
+          .map(subject => subject.trim().replace(/\n.*/g, ''));
 
         staff.add(new Employee(shortHandSymbol, name, subjects));
       }
@@ -84,6 +91,10 @@ class StaffLoader {
     return staff;
   }
 
+  /**
+   * Load latest staff list from Pius website.
+   * @returns {Promise<Staff|Error>} - Staff as loaded from website.
+   */
   async loadFromWeb() {
     const data = await this.htmlLoader.load();
     return this.extractStaffFromPage(data);
