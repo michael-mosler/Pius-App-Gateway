@@ -24,6 +24,7 @@ const SlackBot = require('./core-services/SlackBot');
 const DeviceTokenManager = require('./core-services/DeviceTokenManager');
 const RequestCache = require('./providers/RequestCache');
 const { StaffLoaderJob } = require('./functional-services/StaffLoaderJob');
+const StaffHandler = require('./v2-services/StaffHandler');
 
 const slackBot = new SlackBot();
 
@@ -40,6 +41,7 @@ class App {
     this.logService = new LogService();
     this.config = new Config();
     this.pusherJobs = [];
+    this.staffLoaderJob = null;
     this.requestCache = null;
 
     this.initApp();
@@ -77,7 +79,15 @@ class App {
 
     if (process.env.START_PUSHER === 'true') {
       this.pusherJobs.forEach(job => job.start());
+      this.logService.logger.info('Pusher jobs have been started');
       slackBot.post('Pushers have been started.');
+    }
+
+    this.createStaffLoaderJob();
+    if (process.env.START_STAFF_LOADER === 'true') {
+      this.staffLoaderJob.start();
+      this.logService.logger.info('Staff loader job has been started');
+      slackBot.post('Staff Loader job has been started.');
     }
   }
 
@@ -100,6 +110,26 @@ class App {
         vertretungsplanHandler.checker();
       }, null, false, 'Europe/Berlin'),
     );
+  }
+
+  /**
+   * Creates the staff load job. Job runs every nivht a 3am CE(S)T.
+   * @private
+   */
+  createStaffLoaderJob() {
+    this.logService.logger.info('Creating staff loader job...');
+
+    this.staffLoaderJob = new Cron.CronJob('0 0 3 * * *', async () => {
+      const logService = new LogService();
+      try {
+        logService.logger.info('Running staff loader job');
+        const staffLoaderJob = new StaffLoaderJob();
+        await staffLoaderJob.run();
+        logService.logger.info('Staff loader job finished successfully');
+      } catch (err) {
+        logService.logger.error(`Staff Loader Job failed: ${err}`);
+      }
+    }, null, false, 'Europe/Berlin');
   }
 
   /**
@@ -158,6 +188,22 @@ class App {
   }
 
   /**
+   * Check if request has correct API token and if so call f(req, res).
+   * f will get catchified before being called, thus no exception or unhandled
+   * promise rejection will break the caller.
+   * @param {Request} req Express request object
+   * @param {ServerResponse} res Express response object
+   * @param {Function} f Function to run; (req, res) => { ... }
+   */
+  authorizedExec(req, res, f) {
+    if (sha1(req.body.apiKey) !== Config.apiKey) {
+      res.status(401).end();
+    } else {
+      App.catchify(f)(req, res);
+    }
+  }
+
+  /**
    * Initialise Express routing.
    * @returns {Router}
    * @private
@@ -200,6 +246,11 @@ class App {
       calendarHandler.process(req, res);
     }));
 
+    router.get('/v2/staff', App.catchify((req, res) => {
+      const staffHandler = new StaffHandler();
+      staffHandler.process(req, res);
+    }));
+
     router.head('/validateLogin', App.catchify((req, res) => {
       const vertretungsplanHandler = new VertretungsplanHandler();
       vertretungsplanHandler.validateLogin(req, res);
@@ -226,30 +277,42 @@ class App {
       },
     }));
 
-    router.post('/startPusher', (req, res) => {
-      if (sha1(req.body.apiKey) !== Config.apiKey) {
-        res.status(401).end();
-      } else {
+    router.post('/pusher', (req, res) => {
+      this.authorizedExec(req, res, (req, res) => {
         this.logService.logger.info('Starting pushers...');
         this.pusherJobs.forEach(job => job.start());
         res.status(200).end();
-      }
+      });
     });
 
-    router.delete('/startPusher', (req, res) => {
-      if (sha1(req.body.apiKey) !== Config.apiKey) {
-        res.status(401).end();
-      } else {
+    router.delete('/pusher', (req, res) => {
+      this.authorizedExec(req, res, (req, res) => {
         this.logService.logger.info('Stopping pushers..');
         this.pusherJobs.forEach(job => job.stop());
         res.status(200).end();
-      }
+      });
+    });
+
+    router.post('/staffLoader', (req, res) => {
+      this.authorizedExec(req, res, (req, res) => {
+        this.logService.logger.info('Starting Staff Loader...');
+        this.staffLoaderJob.start();
+        res.status(200).end();
+      });
+    });
+
+    router.delete('/staffLoader', (req, res) => {
+      this.authorizedExec(req, res, (req, res) => {
+        this.logService.logger.info('Stopping Staff Loader..');
+        this.staffLoaderJob.stop();
+        res.status(200).end();
+      });
     });
 
     // DEBUG routes are available in dev only.
     if (process.env.NODE_ENV === 'dev') {
       // Trigger push notification.
-      router.post('/checker', (req, res) => {
+      router.put('/pusher', (req, res) => {
         this.logService.logger.info('POST on /checker');
         const vertretungsplanHandler = new VertretungsplanHandler('v2');
         vertretungsplanHandler.checker();
@@ -257,7 +320,7 @@ class App {
         res.status(200).end();
       });
 
-      router.post('/staffLoader', async (req, res) => {
+      router.put('/staffLoader', async (req, res) => {
         try {
           this.logService.logger.info('POST on /staffLoader');
           const staffLoaderJob = new StaffLoaderJob();
