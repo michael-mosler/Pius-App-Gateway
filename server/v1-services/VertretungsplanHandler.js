@@ -75,7 +75,6 @@ class GradeItem {
 /**
  * The Vetretungsplan for a certain Date.
  * @property {GradeItem} currentGradeItem - Latest grade item that has been added.
- * @property {String} digest - MD5 hash value of core data
  */
 class DateItem {
   constructor(title) {
@@ -98,6 +97,7 @@ class DateItem {
 /**
  * Base class for convertred Vertretungsplan. An instance of this calss will be jsonfied
  * and then sent as result to out App.
+ * @property {String} md5 - Compute MD5 value for this.
  * @property {String} digest - MD5 digest of the current content.
  * @property {String} additionalText - Content of additional text fields of web page.
  * @property {DateItem} currentDateItem - Latest date item that has been added.
@@ -110,9 +110,6 @@ class Vertretungsplan {
     this.dateItems = [];
   }
 
-  /**
-   * Gets md5 hash of this.
-   */
   get md5() {
     return md5(JSON.stringify(this));
   }

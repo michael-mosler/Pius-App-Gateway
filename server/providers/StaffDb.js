@@ -1,3 +1,4 @@
+const md5 = require('md5');
 const CloudantDb = require('../core-services/CloudantDb');
 
 /**
@@ -5,12 +6,27 @@ const CloudantDb = require('../core-services/CloudantDb');
  * @property {String} _id - Constant value "staff"
  * @property {String} _rev - Cloudant revision
  * @property {Object} - Staff dictionary as returned by Staff.dictionary.
+ * @property {String} - digest - Message digest of document
+ * @property {String} digest - MD5 digest of the current content.
  */
 class StaffDoc {
   constructor(rev = undefined, staffDictionary) {
     this._id = 'staff';
     this._rev = rev;
+    this._digest = undefined;
     this.staffDictionary = staffDictionary;
+  }
+
+  get md5() {
+    return md5(JSON.stringify(this.staffDictionary));
+  }
+
+  get digest() {
+    return this._digest;
+  }
+
+  set digest(value) {
+    this._digest = value;
   }
 }
 

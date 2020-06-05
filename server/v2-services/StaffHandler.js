@@ -1,4 +1,3 @@
-const md5 = require('md5');
 const LogService = require('../helper/LogService');
 const { StaffDb } = require('../providers/StaffDb');
 
@@ -19,12 +18,11 @@ class StaffHandler {
   async process(req, res) {
     try {
       const staffDoc = await this.staffDb.get();
-      const digest = md5(JSON.stringify(staffDoc));
+      staffDoc.digest = staffDoc.md5;
 
-      if (process.env.DIGEST_CHECK === 'true' && digest === req.query.digest) {
+      if (process.env.DIGEST_CHECK === 'true' && staffDoc.digest === req.query.digest) {
         res.status(304).end();
       } else {
-        staffDoc.digest = digest;
         res.status(200).send(staffDoc);
       }
     } catch (err) {
