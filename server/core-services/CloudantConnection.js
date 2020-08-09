@@ -14,10 +14,19 @@ const Config = require('./Config');
  * @property {String} url - Cloudant service URL, includes credentials, aka basic auth. credentials
  * @property {String} apiKey - Cloudant service API key
  */
+let instance;
+
 class CloudantConnection {
   constructor() {
-    this.instanceName = 'Cloudant';
-    this.instanceOffering = 'Lite';
+    if (!instance) {
+      this.instanceName = 'Cloudant';
+      this.instanceOffering = 'Lite';
+      this.cloudant = null;
+
+      instance = this;
+    }
+
+    return instance;
   }
 
   // noinspection JSMethodCanBeStatic
@@ -73,20 +82,24 @@ class CloudantConnection {
    * @throws {verror}
    */
   connect() {
-    try {
-      const url = CloudantConnection.url;
-      return cloudant(url);
-    } catch (err) {
-      const verror = new VError({
-        name: 'DatabaseConnectionError',
-        cause: err,
-        info: {
-          instanceName: this.instanceName,
-          instanceOffering: this.instanceOffering,
-        },
-      }, 'Failed to connect to CloudantDB');
-      throw verror;
+    if (!this.cloudant) {
+      try {
+        const url = CloudantConnection.url;
+        this.cloudant = cloudant(url);
+      } catch (err) {
+        const verror = new VError({
+          name: 'DatabaseConnectionError',
+          cause: err,
+          info: {
+            instanceName: this.instanceName,
+            instanceOffering: this.instanceOffering,
+          },
+        }, 'Failed to connect to CloudantDB');
+        throw verror;
+      }
     }
+
+    return this.cloudant;
   }
 }
 
