@@ -55,23 +55,39 @@ class StaffLoader {
   }
 
   /**
-   * Extracts Staff from given document.
-   * @param {String} data - Web page to extract staff from
-   * @returns {Staff} - Staff object filled from document.
-   * @throws {Error}
+   * Extracts additonal staff data from DOM tree.
+   * @param {*} $ DOM tree
+   * @param {Staff} staff Staff object to start with.
+   * @returns {Staff} Updated staff dictionary
    * @private
    */
-  extractStaffFromPage(data) {
-    const staff = new Staff();
+  extractAdditionalStaffFromPage($, staff) {
+    const trList = $('#main > div.entry > div:nth-child(6) > table').find('tbody > tr');
+    trList.slice(3).each(function () {
+      const siblings = [];
+      $('td', $(this)).each(function () {
+        siblings.push($(this).text());
+      });
 
-    // Scan staff table.
-    const strData = data
-      .toString()
-      .replace(/<br\/?>/g, '\n');
+      if (siblings.length > 1) {
+        const [name, shortHandSymbol] = siblings;
+        staff.add(new Employee(shortHandSymbol, name, 'Betreuung'));
+      }
+    });
 
-    const $ = Cheerio.load(strData);
-    const table = $('#main > div.entry > table');
-    table.find('tbody > tr').slice(3).each(function () {
+    return staff;
+  }
+
+  /**
+   * Extract staf from DOM tree.
+   * @param {*} $ DOM tree
+   * @param {*} staff Staff object to start with.
+   * @returns {Staff} Updated staff dictionary
+   * @private
+   */
+  extractStaff($, staff) {
+    const trList = $('#main > div.entry > table').find('tbody > tr');
+    trList.slice(3).each(function () {
       const siblings = [];
       $('td', $(this)).each(function () {
         siblings.push($(this).text());
@@ -89,6 +105,24 @@ class StaffLoader {
     });
 
     return staff;
+  }
+
+  /**
+   * Extracts Staff from given document.
+   * @param {String} data - Web page to extract staff from
+   * @returns {Staff} - Staff object filled from document.
+   * @throws {Error}
+   * @private
+   */
+  extractStaffFromPage(data) {
+    // Scan staff table.
+    const strData = data
+      .toString()
+      .replace(/<br\/?>/g, '\n');
+
+    const $ = Cheerio.load(strData);
+    const staff = this.extractStaff($, new Staff());
+    return this.extractAdditionalStaffFromPage($, staff);
   }
 
   /**

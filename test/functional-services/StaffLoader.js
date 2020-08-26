@@ -47,12 +47,15 @@ describe('StaffLoader', () => {
 
     const d = await staffLoader.loadFromWeb();
     expect(d.constructor.name).toBe('Staff');
-    expect(d.employees.length).toBe(86);
+    expect(d.employees.length).toBe(91);
     expect(d.employees[0].shortHandSymbol).toBe('BSK');
     expect(d.employees[0].name).toBe('Stephanie Baaske');
     expect(d.employees[0].subjects).toEqual(['Französisch', 'Spanisch']);
     expect(d.employees[85].shortHandSymbol).toBe('WD');
     expect(d.employees[85].name).toBe('Florian Wunder');
     expect(d.employees[85].subjects).toEqual(['Latein', 'Sport']);
+    expect(d.employees[90].name).toBe('Ruth Rijsdijk');
+    expect(d.employees[90].shortHandSymbol).toBe('RIJ');
+    expect(d.employees[90].subjects).toEqual('Betreuung');
   });
 });
