@@ -11,6 +11,8 @@ const retryOptions = {
   randomize: true,
 };
 
+const connection = new Connection();
+
 /**
  * Database Driver class for Cloudant. This class the API that is exported by {@link Database}
  * to the middleware service. The middleware must not make use of Cloudant API directly but
@@ -27,8 +29,7 @@ class CloudantDb {
    */
   constructor(name, connect = true) {
     // noinspection Annotator
-    this.connection = new Connection();
-    this.handle = this.connection.connect();
+    this.handle = connection.connect();
     this.name = name;
     this.connected = false;
     this.db = null;
