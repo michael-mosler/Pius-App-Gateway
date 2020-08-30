@@ -1,6 +1,6 @@
 {
   "name": "pius-gateway",
-  "version": "2.9.3",
+  "version": "2.10.0",
   "description": "Pius Web Gateway for Pius App",
   "repository": {
     "type": "git",
