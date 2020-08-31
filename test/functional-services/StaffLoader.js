@@ -56,6 +56,6 @@ describe('StaffLoader', () => {
     expect(d.employees[85].subjects).toEqual(['Latein', 'Sport']);
     expect(d.employees[90].name).toBe('Ruth Rijsdijk');
     expect(d.employees[90].shortHandSymbol).toBe('RIJ');
-    expect(d.employees[90].subjects).toEqual('Betreuung');
+    expect(d.employees[90].subjects).toEqual(['Betreuung']);
   });
 });

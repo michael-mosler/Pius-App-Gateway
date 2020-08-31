@@ -71,7 +71,7 @@ class StaffLoader {
 
       if (siblings.length > 1) {
         const [name, shortHandSymbol] = siblings;
-        staff.add(new Employee(shortHandSymbol, name, 'Betreuung'));
+        staff.add(new Employee(shortHandSymbol, name, ['Betreuung']));
       }
     });
 
