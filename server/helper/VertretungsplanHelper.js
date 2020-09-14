@@ -240,7 +240,7 @@ class VertretungsplanHelper {
         // we can detect.
         if (gradeItemsNew[0].vertretungsplanItems.length !== gradeItemsOld[0].vertretungsplanItems.length) {
           const logService = new LogService();
-          logService.logger.info(
+          logService.logger.warn(
             'VertretungsplanHelper.delta: Assertion failed. Expected new and old lists to be in sync but they aren\'t.\n' +
             `New: ${util.inspect(gradeItemsNew[0].vertretungsplanItems, { depth: 8 })}\n` +
             `Old: ${util.inspect(gradeItemsOld[0].vertretungsplanItems, { depth: 8 })}`);
