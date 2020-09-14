@@ -12,6 +12,7 @@ const retryOptions = {
 };
 
 const connection = new Connection();
+const handle = connection.connect();
 
 /**
  * Database Driver class for Cloudant. This class the API that is exported by {@link Database}
@@ -29,10 +30,8 @@ class CloudantDb {
    */
   constructor(name, connect = true) {
     // noinspection Annotator
-    this.handle = connection.connect();
     this.name = name;
     this.connected = false;
-    this.db = null;
 
     if (connect) {
       this.connect();
@@ -90,23 +89,10 @@ class CloudantDb {
    * Connect to the database that has been specified on instantiation in parameter 'name' using
    * the the connection also given in constructor call.
    * @returns {CloudantDb} - Connected driver instance
-   * @throws {Verror} - Throws on connection error.
    */
   connect() {
-    try {
-      this.db = this.handle.use(this.name);
-      this.connected = true;
-      return this;
-    } catch (err) {
-      const verror = new Verror({
-        name: 'Database Driver Error',
-        cause: err,
-        info: {
-          dbName: this.name,
-        },
-      }, `Failed to connect to database ${this.name}`);
-      throw verror;
-    }
+    this.connected = true;
+    return this;
   }
 
   // noinspection JSUnusedGlobalSymbols
@@ -127,7 +113,7 @@ class CloudantDb {
    */
   async get(id) {
     const options = { revs_info: false };
-    return this.execWithRetry(async () => this.db.get(id, options), { opName: 'get', key: id }, (bail, err, info) => {
+    return this.execWithRetry(async () => handle.use(this.name).get(id, options), { opName: 'get', key: id }, (bail, err, info) => {
       switch (err.statusCode) {
         case 404: return { };
         case 429: throw err;
@@ -145,7 +131,7 @@ class CloudantDb {
    */
   async insertDocument(doc) {
     const newDoc = Object.assign({}, doc, { timestamp: new Date().toUTCString() });
-    return this.execWithRetry(async () => this.db.insert(newDoc), { opName: 'insert' });
+    return this.execWithRetry(async () => handle.use(this.name).insert(newDoc), { opName: 'insert' });
   }
 
   /**
@@ -154,7 +140,7 @@ class CloudantDb {
    * @returns {Promise<Object|Verror>}
    */
   async find(selector) {
-    return this.execWithRetry(async () => this.db.find(selector), { opName: 'find' });
+    return this.execWithRetry(async () => handle.use(this.name).find(selector), { opName: 'find' });
   }
 
   /**
@@ -163,7 +149,7 @@ class CloudantDb {
    * @returns {Promise<*|Verror>}
    */
   async destroy(doc) {
-    return this.execWithRetry(async () => this.db.destroy(doc._id, doc._rev), { opName: 'destroy' });
+    return this.execWithRetry(async () => handle.use(this.name).destroy(doc._id, doc._rev), { opName: 'destroy' });
   }
 }
 
