@@ -3,17 +3,7 @@ const dateTime = require('date-and-time');
 const Config = require('../../server/core-services/Config');
 
 describe('Config.cloudantVCAP', () => {
-  beforeEach(() => {
-    process.env.VCAP_SERVICES = '{ "cloudant": [ { "credentials": { "apikey": "XXXXX", "host": "HHHHH" } } ] }';
-  });
-
-  afterEach(() => {
-    process.env.CLOUDANT_SERVICE_NAME = undefined;
-    process.env.VCAP_SERVICES = undefined;
-  });
-
   it('should return VCAP info for service name', () => {
-    process.env.CLOUDANT_SERVICE_NAME = 'cloudant';
     const vcap = Config.cloudantVCAP;
     expect(vcap.credentials.apikey).toEqual('XXXXX');
   });
@@ -25,7 +15,6 @@ describe('Config.cloudantVCAP', () => {
   });
 
   it('should throw in JSON parse error', () => {
-    process.env.CLOUDANT_SERVICE_NAME = 'couch';
     process.env.VCAP_SERVICES = '{ "cloudant": [ { "credentials": { "apikey": "XXXXX", "host": "HHHHH" } } ]';
 
     try {

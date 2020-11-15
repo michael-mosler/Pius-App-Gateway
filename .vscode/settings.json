@@ -1,3 +1,4 @@
 {
-  "mocha.showInExplorer": true
+  "mocha.showInExplorer": true,
+  "mochaExplorer.envPath": "./mocha.env"
 }

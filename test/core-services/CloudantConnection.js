@@ -2,8 +2,8 @@ const expect = require('expect');
 const td = require('testdouble');
 
 describe('CloudantConnection VCAP Access', () => {
-  const vcapJSON = '{ "credentials": { "apikey": "XXXXX", "host": "HHHHH", "url": "UUUUU" } }';
-  const vcap = JSON.parse(vcapJSON);
+  const vcapServices = JSON.parse(process.env.VCAP_SERVICES);
+  const vcap = vcapServices.cloudant[0];
   let Config;
 
   beforeEach(() => {
@@ -15,7 +15,7 @@ describe('CloudantConnection VCAP Access', () => {
     Config.cloudantVCAP = vcap;
     expect(CloudantConnection.host).toMatch('HHHHH');
     expect(CloudantConnection.apiKey).toMatch('XXXXX');
-    expect(CloudantConnection.url).toMatch('UUUUU');
+    expect(CloudantConnection.url).toMatch('https://HHHHH');
   });
 
   it('should fail on error', () => {
