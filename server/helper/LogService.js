@@ -1,6 +1,6 @@
 const winston = require('winston');
 const { combine, timestamp, colorize, align, printf } = winston.format;
-const CloudantTransport = require('winston-cloudant');
+const CloudantTransport = require('../core-services/ExtendedWinstonCloudant');
 const CloudantConnection = require('../core-services/CloudantConnection');
 
 let self;
@@ -131,17 +131,17 @@ class LogService {
   /**
    * Try to create Cloudant transport. This may silently return null if transport cannot be
    * created.
-   * @param {number} level Log level to use for transport
+   * @param {number} [level=error] Log level to use for transport
    * @return {Object} Cloudant transport, may be null if transport creation is not possible.
-   * @private
    */
-  static cloudantTransport(level) {
+  static cloudantTransport(level = 'error') {
     try {
       return new CloudantTransport({
         level,
         url: `https://${CloudantConnection.host}`,
         iamApiKey: CloudantConnection.apiKey,
         db: 'combined-log',
+        retention: process.env.LOG_RETENTION || 7,
       });
     } catch (err) {
       // There is not much we can do if we get an exception here.

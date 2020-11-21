@@ -18,7 +18,7 @@ class PostingsDb extends CloudantDb {
    * @returns {Promise<Object|Error>} Resolves to a list of documents with timestamp and message property.
    */
   async getPostings({ forDate, forTarget }) {
-    const filterDate = datetime.format(forDate, 'YYYY-MM-DDTHH:mm:SS');
+    const filterDate = datetime.format(forDate, 'YYYY-MM-DDTHH:mm:ss');
     const postings = await this.find({
       selector: {
         _id: { $gt: filterDate },

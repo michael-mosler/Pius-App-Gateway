@@ -23,5 +23,5 @@ applications:
     NODE_ENV: production
     SLACK_ENABLED: true
     START_PUSHER: true
-    START_STAFF_LOADER: true
+    START_NIGHTLY_JOB: true
   stack: cflinuxfs3

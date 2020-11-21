@@ -53,7 +53,7 @@ describe('LogService', () => {
 
     td.when(winston.createLogger(td.matchers.isA(Object)))
       .thenDo(options => {
-        expect(options.transports.length).toEqual(1);
+        expect(options.transports.length).toEqual(2);
         return td.object(['debug', 'info', 'warn', 'error']);
       });
 

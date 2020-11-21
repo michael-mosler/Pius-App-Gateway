@@ -25,6 +25,7 @@ const DeviceTokenManager = require('./core-services/DeviceTokenManager');
 const RequestCache = require('./providers/RequestCache');
 const { StaffLoaderJob } = require('./functional-services/StaffLoaderJob');
 const StaffHandler = require('./v2-services/StaffHandler');
+const HousekeepingJob = require('./functional-services/HousekeepingJob');
 
 const slackBot = new SlackBot();
 
@@ -41,7 +42,7 @@ class App {
     this.logService = new LogService();
     this.config = new Config();
     this.pusherJobs = [];
-    this.staffLoaderJob = null;
+    this.nightlyJob = null;
     this.requestCache = null;
 
     this.initApp();
@@ -83,11 +84,11 @@ class App {
       slackBot.post('Pushers have been started.');
     }
 
-    this.createStaffLoaderJob();
-    if (process.env.START_STAFF_LOADER === 'true') {
-      this.staffLoaderJob.start();
-      this.logService.logger.info('Staff loader job has been started');
-      slackBot.post('Staff Loader job has been started.');
+    this.createNightlyJob();
+    if (process.env.START_NIGHTLY_JOB === 'true') {
+      this.nightlyJob.start();
+      this.logService.logger.info('Nightly job has been started');
+      slackBot.post('Nightly job has been started.');
     }
   }
 
@@ -113,22 +114,29 @@ class App {
   }
 
   /**
-   * Creates the staff load job. Job runs every nivht a 3am CE(S)T.
+   * Creates the nightly job which runs every night a 3am CE(S)T.
+   * The job
+   *  + reloads staff data from backend
+   *  + performs housekeeping.
+   * The job runs tasks in sequence as otherwise rate limits in DB service
+   * can get exceeded.
    * @private
    */
-  createStaffLoaderJob() {
-    this.logService.logger.info('Creating staff loader job...');
+  createNightlyJob() {
+    this.logService.logger.info('Creating nightly job...');
 
-    this.staffLoaderJob = new Cron.CronJob('0 0 3 * * *', async () => {
+    this.nightlyJob = new Cron.CronJob('0 0 3 * * *', async () => {
       const logService = new LogService();
-      try {
-        logService.logger.info('Running staff loader job');
-        const staffLoaderJob = new StaffLoaderJob();
-        await staffLoaderJob.run();
-        logService.logger.info('Staff loader job finished successfully');
-      } catch (err) {
-        logService.logger.error(`Staff Loader Job failed: ${err}`);
-      }
+      [StaffLoaderJob, HousekeepingJob].forEach(async JobExecutorClass => {
+        try {
+          const job = new JobExecutorClass();
+          logService.logger.info(`Running staff ${JobExecutorClass.name}`);
+          logService.logger.info(`${JobExecutorClass.name} finished successfully`);
+          await job.run();
+        } catch (err) {
+          logService.logger.error(`${JobExecutorClass.name} failed: ${err}`);
+        }
+      });
     }, null, false, 'Europe/Berlin');
   }
 
@@ -296,7 +304,7 @@ class App {
     router.post('/staffLoader', (req, res) => {
       this.authorizedExec(req, res, (req, res) => {
         this.logService.logger.info('Starting Staff Loader...');
-        this.staffLoaderJob.start();
+        this.nightlyJob.start();
         res.status(200).end();
       });
     });
@@ -304,7 +312,7 @@ class App {
     router.delete('/staffLoader', (req, res) => {
       this.authorizedExec(req, res, (req, res) => {
         this.logService.logger.info('Stopping Staff Loader..');
-        this.staffLoaderJob.stop();
+        this.nightlyJob.stop();
         res.status(200).end();
       });
     });
@@ -325,6 +333,17 @@ class App {
           this.logService.logger.info('POST on /staffLoader');
           const staffLoaderJob = new StaffLoaderJob();
           await staffLoaderJob.run();
+          res.status(200).end();
+        } catch (err) {
+          res.status(500).send(err);
+        }
+      });
+
+      router.put('/housekeeping', async (req, res) => {
+        try {
+          this.logService.logger.info('POST on /housekeeping');
+          const housekeepingJob = new HousekeepingJob();
+          await housekeepingJob.run();
           res.status(200).end();
         } catch (err) {
           res.status(500).send(err);
