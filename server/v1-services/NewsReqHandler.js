@@ -94,9 +94,7 @@ class NewsReqHandler {
     $('.left').remove();
     $('.right').remove();
     $('body > header:nth-child(2)').remove();
-    /*
     $('#box').remove();
-    */
 
     $('script').each(function () {
       let uri = $(this).attr('src');
