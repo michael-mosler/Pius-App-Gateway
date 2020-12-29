@@ -17,8 +17,8 @@ const vertretungsplanURL = 'https://pius-gymnasium.de/vertretungsplan/';
 
 // Regular grades to keep. There may be some "grades" we do not want to keep.
 // In the past, accidently "AUFS" was used which is not of any meaning to us.
-const allValidGradesPattern = new RegExp('^((\\d[A-E])|(Q[12])|(EF)|(IK)|(VT)|(HW))');
-const allExistingGradesPattern = new RegExp('^((\\d[A-E])|(Q[12])|(EF)|(IK)|(VT)|(HW)|(AUFS))');
+const allValidGradesPattern = /'^((\\d[A-E])|(Q[12])|(EF)|(IK)|(VT)|(HW))'/;
+const allExistingGradesPattern = /'^((\\d[A-E])|(Q[12])|(EF)|(IK)|(VT)|(HW)|(AUFS))'/;
 
 /**
  * A single Vertretungsplan item. Every item consists of a set of properties that are
@@ -133,6 +133,13 @@ class Vertretungsplan {
    */
   set additionalText(value) {
     this._additionalText = `${this._additionalText} ${value}`.trim();
+  }
+
+  /**
+   * @returns {String}
+   */
+  get additionalText() {
+    return this._additionalText;
   }
 
   // noinspection JSUnusedGlobalSymbols

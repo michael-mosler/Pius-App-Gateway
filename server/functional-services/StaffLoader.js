@@ -6,12 +6,16 @@ const { HtmlLoader } = require('../core-services/HtmlLoader');
  * @property {String} shortHandSymbol - Shorthand symbol used in substitution schedule, e.g.
  * @property {String} name - Name
  * @property {String[]} subjects - Subjects covered
+ * @property {Boolean} isTeacher - True if employee is listed as teacher
+ * @property {String} email - E-Mail adress
  */
 class Employee {
-  constructor(shortHandSymbol, name, subjects) {
+  constructor(shortHandSymbol, name, subjects, isTeacher, email = undefined) {
     this.shortHandSymbol = shortHandSymbol;
     this.name = name;
     this.subjects = subjects;
+    this.isTeacher = isTeacher;
+    this.email = email;
   }
 }
 
@@ -31,6 +35,8 @@ class Staff {
       dict[employee.shortHandSymbol] = {
         name: employee.name,
         subjects: employee.subjects,
+        isTeacher: employee.isTeacher,
+        email: employee.email,
       };
     });
     return dict;
@@ -71,7 +77,7 @@ class StaffLoader {
 
       if (siblings.length > 1) {
         const [name, shortHandSymbol] = siblings;
-        staff.add(new Employee(shortHandSymbol, name, ['Betreuung']));
+        staff.add(new Employee(shortHandSymbol, name, ['Betreuung'], false));
       }
     });
 
@@ -90,17 +96,25 @@ class StaffLoader {
     trList.slice(3).each(function () {
       const siblings = [];
       $('td', $(this)).each(function () {
-        siblings.push($(this).text());
+        // Check if we have found mailto node. If so
+        // extract email address.
+        const mailRef = $('a', $(this));
+        if (mailRef.length === 0) {
+          siblings.push($(this).text());
+        } else {
+          const mailTo = mailRef[0].attribs.href;
+          siblings.push(mailTo.split(':')[1]);
+        }
       });
 
       // For a data row we expect more than one td element.
       if (siblings.length > 1) {
-        const [name, shortHandSymbol, subjectText] = siblings;
+        const [name, shortHandSymbol, subjectText, email] = siblings;
         const subjects = (subjectText || '')
           .split(',')
           .map(subject => subject.trim().replace(/\n.*/g, ''));
 
-        staff.add(new Employee(shortHandSymbol, name, subjects));
+        staff.add(new Employee(shortHandSymbol, name, subjects, true, email));
       }
     });
 

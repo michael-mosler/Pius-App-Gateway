@@ -6,9 +6,13 @@ const { Employee, Staff } = require('../../server/functional-services/StaffLoade
 describe('Staff', () => {
   it('should convert into dictionary', () => {
     const staff = new Staff();
-    staff.add(new Employee('aaa', 'Anton', ['LK', 'GK']));
-    staff.add(new Employee('bbb', 'Berta', ['GK']));
-    expect(staff.dictionary).toEqual({ aaa: { name: 'Anton', subjects: ['LK', 'GK'] }, bbb: { name: 'Berta', subjects: ['GK'] } });
+    staff.add(new Employee('aaa', 'Anton', ['LK', 'GK'], true, 'foo@bar.com'));
+    staff.add(new Employee('bbb', 'Berta', ['GK'], false, 'bar@foo.com'));
+    expect(staff.dictionary).toEqual(
+      {
+        aaa: { name: 'Anton', subjects: ['LK', 'GK'], isTeacher: true, email: 'foo@bar.com' },
+        bbb: { name: 'Berta', subjects: ['GK'], isTeacher: false, email: 'bar@foo.com' },
+      });
   });
 
   it('should convert empty staff list', () => {
@@ -51,11 +55,16 @@ describe('StaffLoader', () => {
     expect(d.employees[0].shortHandSymbol).toBe('BSK');
     expect(d.employees[0].name).toBe('Stephanie Baaske');
     expect(d.employees[0].subjects).toEqual(['Französisch', 'Spanisch']);
+    expect(d.employees[0].isTeacher).toBe(true);
+    expect(d.employees[0].email).toBe('s.baaske@pius-gymnasium.de');
     expect(d.employees[85].shortHandSymbol).toBe('WD');
     expect(d.employees[85].name).toBe('Florian Wunder');
     expect(d.employees[85].subjects).toEqual(['Latein', 'Sport']);
+    expect(d.employees[85].email).toBe('f.wunder@pius-gymnasium.de');
     expect(d.employees[90].name).toBe('Ruth Rijsdijk');
     expect(d.employees[90].shortHandSymbol).toBe('RIJ');
     expect(d.employees[90].subjects).toEqual(['Betreuung']);
+    expect(d.employees[90].isTeacher).toBe(false);
+    expect(d.employees[90].email).toBeUndefined();
   });
 });
