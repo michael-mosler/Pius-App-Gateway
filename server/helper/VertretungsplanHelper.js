@@ -156,7 +156,8 @@ class VertretungsplanHelper {
     try {
       const deltaList = [];
       const newSchedule = clone(changeListItem.substitutionSchedule);
-      const oldSchedule = clone(VertretungsplanHelper.synchronizeSchedule(newSchedule.dateItems[0].title, changeListItem.oldSubstitutionSchedule));
+      const [{ title: syncTitle } = { title: '' }] = newSchedule.dateItems;
+      const oldSchedule = clone(VertretungsplanHelper.synchronizeSchedule(syncTitle, changeListItem.oldSubstitutionSchedule));
 
       for (let dateIndex = 0; dateIndex < Math.max(newSchedule.dateItems.length, oldSchedule.dateItems.length); dateIndex++) {
         let titleNew = null;
@@ -164,14 +165,16 @@ class VertretungsplanHelper {
         let gradeItemsNew, gradeItemsOld;
 
         if (newSchedule.dateItems[dateIndex]) {
-          titleNew = newSchedule.dateItems[dateIndex].title;
+          const dateItem = newSchedule.dateItems[dateIndex];
+          titleNew = (dateItem) ? dateItem.title : '';
           gradeItemsNew = newSchedule.dateItems[dateIndex].gradeItems;
         } else {
           gradeItemsNew = [];
         }
 
         if (oldSchedule.dateItems[dateIndex]) {
-          titleOld = oldSchedule.dateItems[dateIndex].title;
+          const dateItem = newSchedule.dateItems[dateIndex];
+          titleOld = (dateItem) ? dateItem.title : '';
           gradeItemsOld = oldSchedule.dateItems[dateIndex].gradeItems;
         } else {
           gradeItemsOld = [];
