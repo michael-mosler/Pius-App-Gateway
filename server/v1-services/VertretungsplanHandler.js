@@ -156,9 +156,20 @@ class Vertretungsplan {
       return;
     }
 
-    const pattern = typeof forGrades === 'string' ? new RegExp(forGrades) : forGrades;
+    let filterFunc;
+
+    if (typeof forGrades === 'string') {
+      filterFunc = (pattern => {
+        return gradeItem => gradeItem.grade === pattern;
+      })(forGrades);
+    } else {
+      filterFunc = (pattern => {
+        return gradeItem => gradeItem.grade.match(pattern);
+      })(forGrades);
+    }
+
     this.dateItems.forEach((date) => {
-      date.gradeItems = date.gradeItems.filter(gradeItem => gradeItem.grade.match(pattern));
+      date.gradeItems = date.gradeItems.filter(gradeItem => filterFunc(gradeItem));
     });
   }
 
