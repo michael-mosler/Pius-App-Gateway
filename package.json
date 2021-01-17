@@ -52,7 +52,7 @@
     "doc": "node node_modules/jsdoc/jsdoc.js --recurse -d doc -a all server"
   },
   "devDependencies": {
-    "eslint": "^7.17.0",
+    "eslint": "^7.18.0",
     "eslint-config-standard": "^16.0.2",
     "eslint-plugin-import": "^2.22.1",
     "eslint-plugin-mocha": "^8.0.0",
@@ -64,7 +64,7 @@
     "jsdoc": "^3.6.6",
     "mocha": "^8.2.1",
     "nyc": "^15.1.0",
-    "supertest": "^6.0.1",
+    "supertest": "^6.1.1",
     "testdouble": "^3.16.1"
   }
 }
