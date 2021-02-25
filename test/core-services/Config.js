@@ -56,4 +56,10 @@ describe('Config.simDate', () => {
       expect(err.message).toEqual('Invalid Date');
     }
   });
+
+  it('should allow reset', () => {
+    const config = new Config();
+    config.simDate = null;
+    expect(config.simDate).toBeNull();
+  });
 });

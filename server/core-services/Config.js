@@ -92,10 +92,14 @@ class Config {
    * @throws {Error} If value cannot be converted to Date.
    */
   set simDate(value) {
-    if (dateTime.isValid(value, 'YYYYMMDD')) {
-      this.debug.simDate = dateTime.parse(value, 'YYYYMMDD');
+    if (value) {
+      if (dateTime.isValid(value, 'YYYYMMDD')) {
+        this.debug.simDate = dateTime.parse(value, 'YYYYMMDD');
+      } else {
+        throw new Error('Invalid Date');
+      }
     } else {
-      throw new Error('Invalid Date');
+      this.debug.simDate = null;
     }
   }
 
